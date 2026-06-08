@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>sentinel_hips</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <main class="page">
+      <header class="page-header">
+        <h1>sentinel_hips</h1>
+        <p>Dashboard de alarmas HIPS</p>
+      </header>
+
+      <section class="panel">
+        <h2>Alarmas</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Tipo</th>
+              <th>IP origen</th>
+              <th>Modulo</th>
+              <th>Accion</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for alarm in alarms %}
+            <tr>
+              <td>{{ alarm.timestamp }}</td>
+              <td>{{ alarm.tipo_alarma }}</td>
+              <td>{{ alarm.ip_origen }}</td>
+              <td>{{ alarm.modulo }}</td>
+              <td>{{ alarm.accion_tomada }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </body>
+</html>
+

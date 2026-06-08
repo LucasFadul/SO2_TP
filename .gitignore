@@ -1,0 +1,19 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Secrets and runtime files
+.env
+*.log
+config/*.enc
+!config/*.enc.example
+
+# Local generated data
+var/
+dist/
+build/
+
