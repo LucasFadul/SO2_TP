@@ -35,6 +35,5 @@ GRANT CONNECT ON DATABASE hips TO hips_app;
 ## Ejecutar dashboard
 
 ```bash
-flask --app web.app run --host 0.0.0.0 --port 5000
+uvicorn web.app:app --host 0.0.0.0 --port 8000
 ```
-

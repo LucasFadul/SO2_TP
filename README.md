@@ -10,7 +10,7 @@ El objetivo es detectar eventos sospechosos en Rocky Linux, registrar alarmas, e
 detection/      Modulos de deteccion i-x
 prevention/     Acciones preventivas reutilizables
 alerts/         Logger central y email
-web/            Aplicacion Flask y dashboard
+web/            Aplicacion FastAPI y dashboard
 db/             Esquema PostgreSQL y conexion
 config/         Configuracion cifrada o plantillas
 tests/          Pruebas automatizadas
@@ -24,7 +24,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-flask --app web.app run --debug
+uvicorn web.app:app --reload
 ```
 
 ## Flujo esperado
@@ -46,4 +46,3 @@ evento -> detector -> alarma -> /var/log/hips/alarmas.log -> PostgreSQL -> dashb
 ## Seguridad
 
 No subir `.env` ni archivos `*.enc` reales. El repositorio incluye solo ejemplos sin secretos.
-
