@@ -1,2 +1,2 @@
-"""Detection modules for sentinel_hips."""
+"""Detection modules for hips_rocky."""
 

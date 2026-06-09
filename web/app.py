@@ -15,7 +15,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="sentinel_hips", version="0.1.0")
+    app = FastAPI(title="hips_rocky", version="0.1.0")
     app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
     @app.get("/", response_class=HTMLResponse)

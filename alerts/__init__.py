@@ -1,2 +1,2 @@
-"""Alerting helpers for sentinel_hips."""
+"""Alerting helpers for hips_rocky."""
 

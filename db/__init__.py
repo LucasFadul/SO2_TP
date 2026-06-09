@@ -1,2 +1,2 @@
-"""Database helpers for sentinel_hips."""
+"""Database helpers for hips_rocky."""
 

@@ -1,4 +1,4 @@
-# sentinel_hips
+# hips_rocky
 
 Proyecto HIPS para Sistemas Operativos.
 

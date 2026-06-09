@@ -1,2 +1,2 @@
-"""Prevention actions for sentinel_hips."""
+"""Prevention actions for hips_rocky."""
 
