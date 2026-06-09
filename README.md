@@ -36,9 +36,9 @@ evento -> detector -> alarma -> /var/log/hips/alarmas.log -> PostgreSQL -> dashb
 ## Prioridad de desarrollo
 
 1. Logger central y base de datos.
-2. Modulo iv `log_analyzer`.
-3. Modulo x `access_monitor`.
-4. Modulo iii `sniffer_detect`.
+2. Modulo ii `users_monitor`.
+3. Modulo vi `process_monitor`.
+4. Modulo iv `log_analyzer`.
 5. Prevencion con `firewalld` y control de procesos.
 6. Dashboard y alertas por email.
 7. Modulos restantes, tests y manuales.

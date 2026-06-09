@@ -17,8 +17,8 @@ Junio 2026
 | Lenguaje principal | Python 3.x | Librería estándar cubre lectura de logs, procesos (psutil), hashing (hashlib) y sockets. Scripts de detección son cortos y mantenibles. Bash queda para wrappers de prueba. |
 | Web framework | FastAPI | API REST nativa con validación automática via Pydantic, documentación Swagger/OpenAPI generada automáticamente (útil para endpoints del dashboard). Async permite manejar múltiples consultas al dashboard sin bloquear. Django agrega ORM y admin no requeridos; Flask no tiene validación de tipos integrada. |
 | ORM / acceso BD | psycopg2 \+ SQL plano | Queries de inserción de alarmas son simples. Evita overhead de un ORM completo; mantiene legibilidad para el equipo y facilita auditoría de queries. |
-| Sistema operativo | Rocky Linux 9 (latest stable) | Requerimiento del enunciado. RHEL-compatible, soporte hasta 2032, SELinux enforcing por defecto, alineado a CIS Benchmark y STIGs de DISA. |
-| Base de datos | PostgreSQL 16 | Requerimiento del enunciado. CIS Benchmark disponible, soporte SSL nativo, logging granular, row-level security. Versión 16 en repos RHEL9. |
+| Sistema operativo | Rocky Linux 10.2 (Red Quartz) | Requerimiento del enunciado. RHEL-compatible, soporte vigente de la rama 10, SELinux enforcing por defecto, alineado a CIS Benchmark y STIGs de DISA. |
+| Base de datos | PostgreSQL 16 | Requerimiento del enunciado. CIS Benchmark disponible, soporte SSL nativo, logging granular, row-level security. Version 16 disponible para el entorno del proyecto. |
 | Testing | pytest \+ subprocess mocks | Estándar de facto en Python. Permite fixtures para simular archivos de log, salidas de comandos y condiciones de alarma sin root real. |
 | Alertas email | smtplib (stdlib) | Sin dependencias externas. Configuración por variable de entorno HIPS\_SMTP\_\*. Suficiente para envío SMTP relay interno. |
 | Encriptación config | GPG (gnupg stdlib wrapper) | GPG disponible en Rocky Linux, bien documentado, permite cifrar baseline\_hashes.enc con clave asimétrica. Alternativa: openssl enc AES-256-CBC. |
