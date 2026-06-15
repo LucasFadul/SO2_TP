@@ -69,7 +69,7 @@ Ingresar una contrasena incorrecta varias veces.
 En Rocky ejecutar:
 
 ```bash
-python3 scripts/run_real_ssh_monitor.py
+python3 main.py
 ```
 
 Resultado esperado:
@@ -84,3 +84,5 @@ Prevencion registrada: accion_id=... | alarma_id=... | block_ip | dry_run=True
 Luego refrescar el dashboard y verificar que la alarma aparezca en la tabla `alarmas`.
 
 La accion preventiva se registra en `acciones_prevencion`. Por defecto se usa `dry_run=true` para no bloquear accidentalmente la IP de la Mac durante la demo.
+
+El script `scripts/run_real_ssh_monitor.py` queda como alias de compatibilidad, pero el runner general del HIPS es `main.py`.
