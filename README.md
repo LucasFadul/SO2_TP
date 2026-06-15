@@ -48,6 +48,7 @@ evento -> detector -> alarma -> /var/log/hips/alarmas.log -> PostgreSQL -> dashb
 ```bash
 python3 -m pytest -q
 python3 scripts/test_db_insert.py
+python3 scripts/run_real_ssh_monitor.py
 ```
 
 ## Seguridad

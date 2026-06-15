@@ -55,3 +55,29 @@ Resultado esperado:
 Insercion Python -> PostgreSQL OK
 (..., 'TEST_PYTHON', 'manual', 'baja', 'insert desde scripts/test_db_insert.py')
 ```
+
+## Prueba real de accesos SSH invalidos
+
+Desde la Mac generar varios intentos fallidos contra Rocky:
+
+```bash
+ssh usuario_falso@<IP_ROCKY>
+```
+
+Ingresar una contrasena incorrecta varias veces.
+
+En Rocky ejecutar:
+
+```bash
+python3 scripts/run_real_ssh_monitor.py
+```
+
+Resultado esperado:
+
+```text
+Lineas sshd leidas: ...
+Alarmas detectadas: 1
+Insertada: ACCESO_INVALIDO_REPETIDO | <IP_MAC> | access_monitor | ...
+```
+
+Luego refrescar el dashboard y verificar que la alarma aparezca en la tabla `alarmas`.
