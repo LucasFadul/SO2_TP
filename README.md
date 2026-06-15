@@ -43,6 +43,13 @@ evento -> detector -> alarma -> /var/log/hips/alarmas.log -> PostgreSQL -> dashb
 6. Dashboard y alertas por email.
 7. Modulos restantes, tests y manuales.
 
+## Pruebas rapidas
+
+```bash
+python3 -m pytest -q
+python3 scripts/test_db_insert.py
+```
+
 ## Seguridad
 
 No subir `.env` ni archivos `*.enc` reales. El repositorio incluye solo ejemplos sin secretos.
