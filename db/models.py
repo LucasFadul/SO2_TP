@@ -45,9 +45,26 @@ def insert_alarm(alarm: Mapping[str, object]) -> int:
 
 def list_alarms(limit: int = 100) -> List[dict]:
     query = """
-        SELECT id, timestamp, tipo_alarma, ip_origen, modulo, severidad, detalle, resuelta
-        FROM alarmas
-        ORDER BY timestamp DESC, id DESC
+        SELECT
+            a.id,
+            a.timestamp,
+            a.tipo_alarma,
+            a.ip_origen,
+            a.modulo,
+            a.severidad,
+            a.detalle,
+            a.resuelta,
+            ap.accion AS accion_tomada,
+            ap.resultado AS resultado_prevencion
+        FROM alarmas a
+        LEFT JOIN LATERAL (
+            SELECT accion, resultado
+            FROM acciones_prevencion
+            WHERE alarma_id = a.id
+            ORDER BY timestamp DESC, id DESC
+            LIMIT 1
+        ) ap ON true
+        ORDER BY a.timestamp DESC, a.id DESC
         LIMIT %s
     """
     with psycopg.connect(database_url(), row_factory=dict_row) as conn:

@@ -28,6 +28,7 @@
               <th>Modulo</th>
               <th>Severidad</th>
               <th>Detalle</th>
+              <th>Acción tomada</th>
               <th>Resuelta</th>
             </tr>
           </thead>
@@ -41,11 +42,12 @@
               <td>{{ alarm.modulo }}</td>
               <td>{{ alarm.severidad }}</td>
               <td>{{ alarm.detalle }}</td>
+              <td>{{ alarm.accion_tomada or "N/A" }}</td>
               <td>{{ "si" if alarm.resuelta else "no" }}</td>
             </tr>
             {% else %}
             <tr>
-              <td colspan="8">No hay alarmas registradas.</td>
+              <td colspan="9">No hay alarmas registradas.</td>
             </tr>
             {% endfor %}
           </tbody>
