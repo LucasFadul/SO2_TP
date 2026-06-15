@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from typing import List, Mapping
+from typing import List, Mapping, Optional
 
 import psycopg
 from psycopg.rows import dict_row
@@ -22,10 +22,11 @@ def get_connection():
     return psycopg.connect(database_url())
 
 
-def insert_alarm(alarm: Mapping[str, object]) -> None:
+def insert_alarm(alarm: Mapping[str, object]) -> int:
     query = """
         INSERT INTO alarmas (tipo_alarma, ip_origen, modulo, severidad, detalle, resuelta)
         VALUES (%s, %s, %s, %s, %s, %s)
+        RETURNING id
     """
     values = (
         alarm.get("tipo_alarma"),
@@ -38,6 +39,8 @@ def insert_alarm(alarm: Mapping[str, object]) -> None:
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(query, values)
+            alarm_id = cur.fetchone()[0]
+            return int(alarm_id)
 
 
 def list_alarms(limit: int = 100) -> List[dict]:
@@ -51,3 +54,22 @@ def list_alarms(limit: int = 100) -> List[dict]:
         with conn.cursor() as cur:
             cur.execute(query, (limit,))
             return list(cur.fetchall())
+
+
+def insert_prevention_action(
+    alarma_id: Optional[int],
+    accion: str,
+    resultado: str,
+    ejecutada_por: str = "sistema",
+) -> int:
+    query = """
+        INSERT INTO acciones_prevencion (alarma_id, accion, resultado, ejecutada_por)
+        VALUES (%s, %s, %s, %s)
+        RETURNING id
+    """
+    values = (alarma_id, accion, resultado, ejecutada_por)
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query, values)
+            action_id = cur.fetchone()[0]
+            return int(action_id)

@@ -78,6 +78,9 @@ Resultado esperado:
 Lineas sshd leidas: ...
 Alarmas detectadas: 1
 Insertada: ACCESO_INVALIDO_REPETIDO | <IP_MAC> | access_monitor | ...
+Prevencion registrada: accion_id=... | alarma_id=... | block_ip | dry_run=True
 ```
 
 Luego refrescar el dashboard y verificar que la alarma aparezca en la tabla `alarmas`.
+
+La accion preventiva se registra en `acciones_prevencion`. Por defecto se usa `dry_run=true` para no bloquear accidentalmente la IP de la Mac durante la demo.
