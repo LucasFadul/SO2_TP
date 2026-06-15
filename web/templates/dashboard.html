@@ -15,24 +15,37 @@
 
       <section class="panel">
         <h2>Alarmas</h2>
+        {% if db_error %}
+        <p class="error">No se pudo leer PostgreSQL: {{ db_error }}</p>
+        {% endif %}
         <table>
           <thead>
             <tr>
+              <th>ID</th>
               <th>Timestamp</th>
               <th>Tipo</th>
               <th>IP origen</th>
               <th>Modulo</th>
-              <th>Accion</th>
+              <th>Severidad</th>
+              <th>Detalle</th>
+              <th>Resuelta</th>
             </tr>
           </thead>
           <tbody>
             {% for alarm in alarms %}
             <tr>
+              <td>{{ alarm.id }}</td>
               <td>{{ alarm.timestamp }}</td>
               <td>{{ alarm.tipo_alarma }}</td>
-              <td>{{ alarm.ip_origen }}</td>
+              <td>{{ alarm.ip_origen or "N/A" }}</td>
               <td>{{ alarm.modulo }}</td>
-              <td>{{ alarm.accion_tomada }}</td>
+              <td>{{ alarm.severidad }}</td>
+              <td>{{ alarm.detalle }}</td>
+              <td>{{ "si" if alarm.resuelta else "no" }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="8">No hay alarmas registradas.</td>
             </tr>
             {% endfor %}
           </tbody>

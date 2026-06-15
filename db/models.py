@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import os
-from typing import Mapping
+from typing import List, Mapping
 
 import psycopg
+from psycopg.rows import dict_row
 
 
 def database_url() -> str:
@@ -38,3 +39,15 @@ def insert_alarm(alarm: Mapping[str, object]) -> None:
         with conn.cursor() as cur:
             cur.execute(query, values)
 
+
+def list_alarms(limit: int = 100) -> List[dict]:
+    query = """
+        SELECT id, timestamp, tipo_alarma, ip_origen, modulo, severidad, detalle, resuelta
+        FROM alarmas
+        ORDER BY timestamp DESC, id DESC
+        LIMIT %s
+    """
+    with psycopg.connect(database_url(), row_factory=dict_row) as conn:
+        with conn.cursor() as cur:
+            cur.execute(query, (limit,))
+            return list(cur.fetchall())

@@ -41,6 +41,12 @@ body {
   font-size: 18px;
 }
 
+.error {
+  margin: 0 0 14px;
+  color: #9f1d1d;
+  font-size: 14px;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -57,4 +63,3 @@ td {
 th {
   background: #eef2f7;
 }
-
