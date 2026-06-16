@@ -25,10 +25,10 @@ print_section "3. Puertos y servicios permitidos en firewalld"
 run_or_warn "sudo firewall-cmd --list-all"
 
 print_section "4. SSH sin login root"
-run_or_warn "sshd -T | grep '^permitrootlogin'"
+run_or_warn "sudo sshd -T | grep '^permitrootlogin'"
 
 print_section "5. SSH PasswordAuthentication"
-run_or_warn "sshd -T | grep '^passwordauthentication'"
+run_or_warn "sudo sshd -T | grep '^passwordauthentication'"
 
 print_section "6. Usuario con privilegios sudo controlados"
 run_or_warn "id '$HIPS_ADMIN_USER'"
@@ -41,6 +41,7 @@ print_section "8. Reglas auditd para archivos criticos"
 run_or_warn "sudo auditctl -l | grep -E '/etc/(passwd|shadow)' || true"
 
 print_section "9. Opciones de montaje de /tmp"
+run_or_warn "findmnt /tmp || true"
 run_or_warn "findmnt -no OPTIONS /tmp || true"
 
 print_section "10. Actualizaciones de seguridad disponibles"
