@@ -16,6 +16,52 @@ def test_users_monitor_detects_unexpected_user(monkeypatch):
     assert alarms[0]["modulo"] == "users_monitor"
 
 
+def test_users_monitor_detects_nologin_user(monkeypatch):
+    monkeypatch.setattr(
+        "detection.users_monitor.list_logged_users",
+        lambda: "svc pts/0 2026-06-08 10:00 (192.168.1.20)\n",
+    )
+
+    alarms = run_users_check(
+        allowed_users={"svc"},
+        user_shells={"svc": "/sbin/nologin"},
+    )
+
+    assert alarms
+    assert "shell no interactiva" in alarms[0]["detalle"]
+
+
+def test_users_monitor_detects_multiple_sessions(monkeypatch):
+    monkeypatch.setattr(
+        "detection.users_monitor.list_logged_users",
+        lambda: (
+            "lucas pts/0 2026-06-08 10:00 (192.168.1.20)\n"
+            "lucas pts/1 2026-06-08 10:01 (192.168.1.20)\n"
+            "lucas pts/2 2026-06-08 10:02 (192.168.1.20)\n"
+        ),
+    )
+
+    alarms = run_users_check(allowed_users={"lucas"}, max_sessions=2)
+
+    assert alarms
+    assert "3 sesiones" in alarms[0]["detalle"]
+
+
+def test_users_monitor_detects_external_ip(monkeypatch):
+    monkeypatch.setattr(
+        "detection.users_monitor.list_logged_users",
+        lambda: "lucas pts/0 2026-06-08 10:00 (203.0.113.5)\n",
+    )
+
+    alarms = run_users_check(
+        allowed_users={"lucas"},
+        allowed_networks={"192.168.0.0/16"},
+    )
+
+    assert alarms
+    assert alarms[0]["ip_origen"] == "203.0.113.5"
+
+
 def test_log_analyzer_detects_failed_logins():
     lines = [
         f"Jun 08 host sshd[123]: Failed password for admin from 10.0.0.25 port {2200 + i} ssh2"
@@ -52,3 +98,18 @@ def test_process_monitor_detects_high_cpu(monkeypatch):
     assert alarms
     assert alarms[0]["tipo_alarma"] == "PROCESO_ALTO_CONSUMO"
     assert alarms[0]["modulo"] == "process_monitor"
+
+
+def test_process_monitor_ignores_whitelisted_process(monkeypatch):
+    monkeypatch.setattr(
+        "detection.process_monitor.get_process_table",
+        lambda: "PID USER %CPU %MEM COMMAND\n123 postgres 95.0 1.0 postgres\n",
+    )
+
+    alarms = run_process_check(
+        cpu_limit=90.0,
+        memory_limit=90.0,
+        process_whitelist={"postgres"},
+    )
+
+    assert alarms == []

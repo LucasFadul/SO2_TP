@@ -16,7 +16,11 @@ from db.models import (
     set_module_config,
 )
 from detection.log_analyzer import analyze_lines
+from detection.process_monitor import run_check as run_process_check
+from detection.users_monitor import run_check as run_users_check
 from prevention.firewall import block_ip
+from prevention.process_kill import kill_process
+from prevention.user_actions import lock_user
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -100,11 +104,10 @@ def register_alarm_with_prevention(
         f"{alarm['modulo']} | {alarm['detalle']}"
     )
 
-    ip_origen = alarm.get("ip_origen")
-    if not ip_origen:
+    result = run_prevention(alarm, dry_run=prevention_dry_run)
+    if not result:
         return
 
-    result = block_ip(str(ip_origen), dry_run=prevention_dry_run)
     action_id = insert_prevention_action(
         alarma_id=alarm_id,
         accion=result["accion"],
@@ -115,6 +118,21 @@ def register_alarm_with_prevention(
         f"accion_id={action_id} | alarma_id={alarm_id} | "
         f"{result['accion']} | dry_run={result['dry_run']}"
     )
+
+
+def run_prevention(alarm: Mapping[str, object], dry_run: bool) -> dict | None:
+    modulo = alarm.get("modulo")
+
+    if modulo == "log_analyzer" and alarm.get("ip_origen"):
+        return block_ip(str(alarm["ip_origen"]), dry_run=dry_run)
+
+    if modulo == "process_monitor" and alarm.get("pid"):
+        return kill_process(int(alarm["pid"]), dry_run=dry_run)
+
+    if modulo == "users_monitor" and alarm.get("usuario"):
+        return lock_user(str(alarm["usuario"]), dry_run=dry_run)
+
+    return None
 
 
 def run_log_analyzer() -> List[dict]:
@@ -143,8 +161,63 @@ def run_log_analyzer() -> List[dict]:
     return alarms
 
 
+def allowed_users_from_env() -> set[str]:
+    raw_users = os.getenv("HIPS_ALLOWED_USERS")
+    if raw_users:
+        return {user.strip() for user in raw_users.split(",") if user.strip()}
+
+    default_user = os.getenv("SUDO_USER") or os.getenv("USER")
+    return {default_user} if default_user else set()
+
+
+def csv_env(name: str, default: str = "") -> list[str]:
+    raw_value = os.getenv(name, default)
+    return [value.strip() for value in raw_value.split(",") if value.strip()]
+
+
+def run_users_monitor() -> List[dict]:
+    allowed_users = allowed_users_from_env()
+    allowed_networks = csv_env(
+        "HIPS_ALLOWED_NETWORKS",
+        "192.168.0.0/16,10.0.0.0/8,172.16.0.0/12",
+    )
+    max_sessions = int(os.getenv("HIPS_USERS_MAX_SESSIONS", "2"))
+    alarms = run_users_check(
+        allowed_users=allowed_users,
+        allowed_networks=allowed_networks,
+        max_sessions=max_sessions,
+    )
+    print(
+        "Modulo users_monitor: "
+        f"usuarios_permitidos={','.join(sorted(allowed_users)) or 'sin filtro'} "
+        f"redes_permitidas={','.join(allowed_networks)} "
+        f"max_sesiones={max_sessions} "
+        f"alarmas={len(alarms)}"
+    )
+    return alarms
+
+
+def run_process_monitor() -> List[dict]:
+    cpu_limit = float(os.getenv("HIPS_CPU_LIMIT_PERCENT", "90"))
+    memory_limit = float(os.getenv("HIPS_MEMORY_LIMIT_PERCENT", "90"))
+    process_whitelist = csv_env("HIPS_PROCESS_WHITELIST", "postgres,rsync,find,dnf")
+    alarms = run_process_check(
+        cpu_limit=cpu_limit,
+        memory_limit=memory_limit,
+        process_whitelist=process_whitelist,
+    )
+    print(
+        "Modulo process_monitor: "
+        f"cpu_limit={cpu_limit} memory_limit={memory_limit} "
+        f"whitelist={','.join(process_whitelist)} alarmas={len(alarms)}"
+    )
+    return alarms
+
+
 def run_enabled_modules() -> Iterable[dict]:
     yield from run_log_analyzer()
+    yield from run_users_monitor()
+    yield from run_process_monitor()
 
 
 def main() -> None:
