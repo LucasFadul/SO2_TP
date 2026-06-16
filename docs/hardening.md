@@ -17,6 +17,88 @@ Checklist para Rocky Linux y PostgreSQL.
 | 9 | `/tmp` con `noexec,nosuid,nodev` | `findmnt -no OPTIONS /tmp` |
 | 10 | Actualizaciones de seguridad revisadas | `dnf updateinfo list security` |
 
+### Auditoria rapida Rocky Linux
+
+Ejecutar en Rocky desde la raiz del proyecto:
+
+```bash
+bash scripts/audit_rocky_hardening.sh
+```
+
+El script no modifica configuracion. Solo verifica:
+
+- SELinux;
+- firewalld;
+- reglas activas del firewall;
+- configuracion efectiva de SSH;
+- privilegios del usuario administrador;
+- estado de `auditd`;
+- reglas de auditoria para `/etc/passwd` y `/etc/shadow`;
+- opciones de montaje de `/tmp`;
+- actualizaciones de seguridad disponibles.
+
+### Estado esperado Rocky Linux
+
+| Control | Resultado esperado |
+| ----- | ----- |
+| SELinux | `Enforcing` |
+| firewalld | `active` |
+| Puertos permitidos | Solo servicios necesarios: SSH y dashboard durante demo |
+| SSH root | `permitrootlogin no` |
+| SSH passwords | Ideal `passwordauthentication no`; durante pruebas puede quedar `yes` y documentarse |
+| Usuario admin | Usuario personal con sudo; no operar como root directamente |
+| auditd | `active` |
+| Auditoria archivos criticos | Reglas para `/etc/passwd` y `/etc/shadow` |
+| `/tmp` | Ideal `noexec,nosuid,nodev`; si no se aplica, documentar como pendiente/justificado |
+| Actualizaciones | Revisadas con `dnf updateinfo list security` |
+
+### Comandos de ajuste Rocky Linux
+
+SELinux enforcing:
+
+```bash
+sudo setenforce 1
+sudo sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
+```
+
+firewalld activo:
+
+```bash
+sudo systemctl enable --now firewalld
+sudo firewall-cmd --add-service=ssh --permanent
+sudo firewall-cmd --add-port=8000/tcp --permanent
+sudo firewall-cmd --reload
+```
+
+SSH sin login root:
+
+```bash
+sudo sed -i 's/^#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+sudo sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+sudo systemctl reload sshd
+```
+
+auditd activo:
+
+```bash
+sudo dnf install -y audit
+sudo systemctl enable --now auditd
+```
+
+Reglas auditd para archivos criticos:
+
+```bash
+sudo auditctl -w /etc/passwd -p wa -k identity
+sudo auditctl -w /etc/shadow -p wa -k identity
+```
+
+Actualizaciones de seguridad:
+
+```bash
+sudo dnf updateinfo list security
+sudo dnf update --security
+```
+
 ## PostgreSQL - 7 controles CIS
 
 | # | Control | Verificacion |
@@ -101,4 +183,5 @@ mkdir -p docs/evidencias
 getenforce | tee docs/evidencias/selinux.txt
 systemctl is-active firewalld | tee docs/evidencias/firewalld.txt
 bash scripts/audit_postgres_hardening.sh | tee docs/evidencias/postgresql_hardening.txt
+bash scripts/audit_rocky_hardening.sh | tee docs/evidencias/rocky_hardening.txt
 ```
