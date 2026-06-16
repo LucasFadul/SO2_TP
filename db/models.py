@@ -90,3 +90,28 @@ def insert_prevention_action(
             cur.execute(query, values)
             action_id = cur.fetchone()[0]
             return int(action_id)
+
+
+def get_module_config(modulo: str, parametro: str) -> Optional[str]:
+    query = """
+        SELECT valor
+        FROM configuracion_modulos
+        WHERE modulo = %s AND parametro = %s AND activo = true
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query, (modulo, parametro))
+            row = cur.fetchone()
+            return str(row[0]) if row else None
+
+
+def set_module_config(modulo: str, parametro: str, valor: object) -> None:
+    query = """
+        INSERT INTO configuracion_modulos (modulo, parametro, valor)
+        VALUES (%s, %s, %s)
+        ON CONFLICT (modulo, parametro)
+        DO UPDATE SET valor = EXCLUDED.valor, activo = true, actualizado_en = now()
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query, (modulo, parametro, str(valor)))

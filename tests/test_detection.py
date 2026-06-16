@@ -28,6 +28,19 @@ def test_log_analyzer_detects_failed_logins():
     assert alarms[0]["ip_origen"] == "10.0.0.25"
 
 
+def test_log_analyzer_detects_mail_anomaly():
+    lines = [
+        f"Jun 08 host postfix/smtpd[123]: warning: 10.0.0.30: SASL authentication failed"
+        for _ in range(11)
+    ]
+
+    alarms = analyze_lines(lines, mail_anomaly_limit=10)
+
+    assert alarms
+    assert alarms[0]["tipo_alarma"] == "MAIL_ANOMALY"
+    assert alarms[0]["ip_origen"] == "10.0.0.30"
+
+
 def test_process_monitor_detects_high_cpu(monkeypatch):
     monkeypatch.setattr(
         "detection.process_monitor.get_process_table",
