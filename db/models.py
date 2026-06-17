@@ -43,8 +43,32 @@ def insert_alarm(alarm: Mapping[str, object]) -> int:
             return int(alarm_id)
 
 
-def list_alarms(limit: int = 100) -> List[dict]:
-    query = """
+RANGE_INTERVALS = {
+    "hora": "1 hour",
+    "dia": "1 day",
+    "semana": "7 days",
+    "mes": "30 days",
+}
+
+
+def list_alarms(
+    limit: int = 100,
+    modulo: Optional[str] = None,
+    rango: Optional[str] = None,
+) -> List[dict]:
+    filters = []
+    values: list[object] = []
+
+    if modulo:
+        filters.append("a.modulo = %s")
+        values.append(modulo)
+
+    if rango in RANGE_INTERVALS:
+        filters.append(f"a.timestamp >= now() - interval '{RANGE_INTERVALS[rango]}'")
+
+    where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
+
+    query = f"""
         SELECT
             a.id,
             a.timestamp,
@@ -64,12 +88,14 @@ def list_alarms(limit: int = 100) -> List[dict]:
             ORDER BY timestamp DESC, id DESC
             LIMIT 1
         ) ap ON true
+        {where_clause}
         ORDER BY a.timestamp DESC, a.id DESC
         LIMIT %s
     """
+    values.append(limit)
     with psycopg.connect(database_url(), row_factory=dict_row) as conn:
         with conn.cursor() as cur:
-            cur.execute(query, (limit,))
+            cur.execute(query, values)
             return list(cur.fetchall())
 
 
