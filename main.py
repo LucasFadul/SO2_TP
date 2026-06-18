@@ -26,8 +26,11 @@ from detection.process_monitor import run_check as run_process_check
 from detection.sniffer_detect import run_check as run_sniffer_check
 from detection.tmp_monitor import run_check as run_tmp_check
 from detection.users_monitor import run_check as run_users_check
+from prevention.file_actions import protect_file, quarantine_file
 from prevention.firewall import block_ip
+from prevention.network import disable_promiscuous_mode
 from prevention.process_kill import kill_process
+from prevention.service_mgmt import stop_service
 from prevention.user_actions import lock_user
 
 
@@ -110,11 +113,27 @@ def register_alarm_with_prevention(
 def run_prevention(alarm: Mapping[str, object], dry_run: bool) -> dict | None:
     modulo = alarm.get("modulo")
 
+    if modulo == "file_integrity" and alarm.get("archivo"):
+        return protect_file(str(alarm["archivo"]), dry_run=dry_run)
+
     if modulo in {"log_analyzer", "ddos_detect", "access_monitor"} and alarm.get("ip_origen"):
         return block_ip(str(alarm["ip_origen"]), dry_run=dry_run)
 
+    if modulo == "sniffer_detect" and alarm.get("pid"):
+        return kill_process(int(alarm["pid"]), dry_run=dry_run)
+
+    if modulo == "sniffer_detect" and alarm.get("interfaz"):
+        return disable_promiscuous_mode(str(alarm["interfaz"]), dry_run=dry_run)
+
+    if modulo == "mail_queue":
+        service = str(alarm.get("service") or "postfix")
+        return stop_service(service, dry_run=dry_run)
+
     if modulo == "process_monitor" and alarm.get("pid"):
         return kill_process(int(alarm["pid"]), dry_run=dry_run)
+
+    if modulo in {"tmp_monitor", "cron_monitor"} and alarm.get("archivo"):
+        return quarantine_file(str(alarm["archivo"]), dry_run=dry_run)
 
     if modulo == "users_monitor" and alarm.get("usuario"):
         return lock_user(str(alarm["usuario"]), dry_run=dry_run)

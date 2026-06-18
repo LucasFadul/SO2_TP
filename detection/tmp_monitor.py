@@ -26,6 +26,7 @@ def scan_tmp(paths: Iterable[Path]) -> List[dict]:
                         "modulo": "tmp_monitor",
                         "ip_origen": None,
                         "severidad": "media",
+                        "archivo": str(path),
                         "detalle": f"Archivo ejecutable o script en /tmp: {path}",
                     }
                 )
@@ -37,4 +38,3 @@ def scan_tmp(paths: Iterable[Path]) -> List[dict]:
 def run_check(tmp_dir: str = "/tmp") -> List[dict]:
     paths = (Path(root) / name for root, _, files in os.walk(tmp_dir) for name in files)
     return scan_tmp(paths)
-

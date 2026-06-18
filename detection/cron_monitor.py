@@ -28,6 +28,8 @@ def scan_cron_files(paths: Iterable[str]) -> List[dict]:
                         "modulo": "cron_monitor",
                         "ip_origen": None,
                         "severidad": "alta",
+                        "archivo": str(path),
+                        "token": token.strip(),
                         "detalle": f"Token sospechoso '{token.strip()}' en {path}",
                     }
                 )

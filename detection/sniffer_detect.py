@@ -40,6 +40,16 @@ def detect_sniffer_processes(ps_output: str, names: Iterable[str] = SNIFFER_PROC
     return matches
 
 
+def process_pid(ps_aux_line: str) -> Optional[int]:
+    parts = ps_aux_line.split(None, 2)
+    if len(parts) < 2:
+        return None
+    try:
+        return int(parts[1])
+    except ValueError:
+        return None
+
+
 def run_check(
     authorized: bool = False,
     process_names: Iterable[str] = SNIFFER_PROCESS_NAMES,
@@ -58,17 +68,21 @@ def run_check(
                 "modulo": "sniffer_detect",
                 "ip_origen": None,
                 "severidad": "alta",
+                "interfaz": iface,
                 "detalle": f"Interfaz en modo promiscuo: {iface}",
             }
         )
 
     for process_line in detect_sniffer_processes(ps_output, names=process_names):
+        pid = process_pid(process_line)
         alarms.append(
             {
                 "tipo_alarma": "SNIFFER_DETECTADO",
                 "modulo": "sniffer_detect",
                 "ip_origen": None,
                 "severidad": "alta",
+                "pid": pid,
+                "proceso": process_line,
                 "detalle": f"Proceso sniffer detectado: {process_line}",
             }
         )

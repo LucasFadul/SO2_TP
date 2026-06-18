@@ -44,6 +44,7 @@ def check_integrity(
                     "modulo": "file_integrity",
                     "ip_origen": None,
                     "severidad": "alta",
+                    "archivo": file_path,
                     "detalle": f"Hash distinto para {file_path}",
                 }
             )

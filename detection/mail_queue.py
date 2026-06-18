@@ -29,6 +29,8 @@ def run_check(limit: int = 100) -> List[dict]:
                 "modulo": "mail_queue",
                 "ip_origen": None,
                 "severidad": "media",
+                "service": "postfix",
+                "conteo": count,
                 "detalle": f"Cola de correo con {count} mensajes",
             }
         ]
