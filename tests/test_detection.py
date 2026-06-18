@@ -47,6 +47,25 @@ def test_users_monitor_detects_multiple_sessions(monkeypatch):
     assert "3 sesiones" in alarms[0]["detalle"]
 
 
+def test_users_monitor_counts_local_tty_for_session_limit(monkeypatch):
+    monkeypatch.setattr(
+        "detection.users_monitor.list_logged_users",
+        lambda: (
+            "lucas tty1 2026-06-08 09:59\n"
+            "lucas pts/0 2026-06-08 10:00 (192.168.1.20)\n"
+            "lucas pts/1 2026-06-08 10:01 (192.168.1.20)\n"
+            "lucas pts/2 2026-06-08 10:02 (192.168.1.20)\n"
+        ),
+    )
+
+    alarms = run_users_check(allowed_users={"lucas"}, max_sessions=2)
+
+    assert alarms
+    assert "4 sesiones" in alarms[0]["detalle"]
+    assert "tty1" in alarms[0]["detalle"]
+    assert "pts/2" in alarms[0]["detalle"]
+
+
 def test_users_monitor_detects_external_ip(monkeypatch):
     monkeypatch.setattr(
         "detection.users_monitor.list_logged_users",

@@ -63,6 +63,12 @@ def build_alarm(username: str, ip_origen: Optional[str], severidad: str, detalle
     }
 
 
+def session_name(parts: List[str]) -> str:
+    if len(parts) >= 2:
+        return parts[1]
+    return "desconocida"
+
+
 def run_check(
     allowed_users: Optional[Set[str]] = None,
     allowed_networks: Optional[Iterable[str]] = None,
@@ -74,6 +80,7 @@ def run_check(
     user_shells = user_shells if user_shells is not None else read_user_shells()
     alarms: List[dict] = []
     sessions_by_user: Counter[str] = Counter()
+    session_names_by_user: Dict[str, List[str]] = {}
     first_ip_by_user: Dict[str, Optional[str]] = {}
 
     for line in list_logged_users().splitlines():
@@ -83,6 +90,7 @@ def run_check(
         username = parts[0]
         ip_origen = parse_origin(parts)
         sessions_by_user[username] += 1
+        session_names_by_user.setdefault(username, []).append(session_name(parts))
         first_ip_by_user.setdefault(username, ip_origen)
 
         if allowed_users and username not in allowed_users:
@@ -117,12 +125,13 @@ def run_check(
 
     for username, count in sessions_by_user.items():
         if count > max_sessions:
+            session_names = ", ".join(session_names_by_user.get(username, []))
             alarms.append(
                 build_alarm(
                     username,
                     first_ip_by_user.get(username),
                     "media",
-                    f"Usuario con {count} sesiones simultaneas: {username}",
+                    f"Usuario con {count} sesiones simultaneas: {username} ({session_names})",
                 )
             )
 
