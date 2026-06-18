@@ -173,7 +173,6 @@ body {
   font: inherit;
 }
 
-.filters button,
 .clear-link {
   min-height: 38px;
   padding: 8px 14px;
@@ -181,17 +180,11 @@ body {
   font: inherit;
 }
 
-.filters button {
-  border: 1px solid #1f5a8a;
-  background: #1f5a8a;
-  color: #ffffff;
-  cursor: pointer;
-  font-weight: 650;
-}
-
 .clear-link {
   display: inline-flex;
   align-items: center;
+  border: 1px solid #cfd6e2;
+  background: #ffffff;
   color: #1f5a8a;
   text-decoration: none;
   font-weight: 650;
@@ -507,7 +500,6 @@ tbody tr:last-child td {
     width: 100%;
   }
 
-  .filters button,
   .clear-link {
     width: 100%;
     justify-content: center;

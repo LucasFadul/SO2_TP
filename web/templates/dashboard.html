@@ -31,10 +31,10 @@
         <p class="error">No se pudo leer PostgreSQL: {{ db_error }}</p>
         {% endif %}
         <div class="toolbar">
-          <form class="filters" method="get">
+          <form class="filters" method="get" id="alarm-filters">
             <label>
               <span>Módulo</span>
-              <select name="modulo">
+              <select name="modulo" onchange="this.form.submit()">
                 <option value="" {% if not selected_module %}selected{% endif %}>Todos</option>
                 {% for module in module_options %}
                 <option value="{{ module }}" {% if selected_module == module %}selected{% endif %}>{{ module }}</option>
@@ -43,13 +43,12 @@
             </label>
             <label>
               <span>Rango</span>
-              <select name="rango">
+              <select name="rango" onchange="this.form.submit()">
                 {% for value, label in range_options.items() %}
                 <option value="{{ value }}" {% if selected_range == value %}selected{% endif %}>{{ label }}</option>
                 {% endfor %}
               </select>
             </label>
-            <button type="submit">Filtrar</button>
             <a class="clear-link" href="/">Limpiar</a>
           </form>
         </div>
