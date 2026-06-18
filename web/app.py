@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from urllib.parse import parse_qs
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -103,13 +104,14 @@ def create_app() -> FastAPI:
 
     @app.post("/config")
     async def save_config(request: Request):
-        form = await request.form()
+        raw_body = (await request.body()).decode()
+        form = parse_qs(raw_body, keep_blank_values=True)
         for setting in SETTINGS:
             field_name = f"{setting.modulo}__{setting.parametro}"
             if setting.input_type == "checkbox":
                 value = "true" if field_name in form else "false"
             else:
-                value = str(form.get(field_name, setting.default)).strip()
+                value = str(form.get(field_name, [setting.default])[0]).strip()
             if not value:
                 value = setting.default
             set_module_config(setting.modulo, setting.parametro, value)
