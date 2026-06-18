@@ -9,11 +9,13 @@
   <body>
     <main class="page">
       <header class="page-header">
-        <h1>hips_rocky</h1>
-        <p>Configuración de módulos HIPS</p>
+        <div>
+          <h1>hips_rocky</h1>
+          <p>Configuración de módulos HIPS</p>
+        </div>
         <nav class="page-nav">
           <a href="/">Alarmas</a>
-          <a href="/config">Configuración</a>
+          <a class="active" href="/config">Configuración</a>
         </nav>
       </header>
 
@@ -29,19 +31,25 @@
         <form method="post" class="config-form">
           {% for modulo, items in grouped_settings.items() %}
           <section class="config-group">
-            <h3>{{ modulo }}</h3>
+            <div class="config-group-header">
+              <h3>{{ modulo }}</h3>
+              <span>{{ items|length }} parámetros</span>
+            </div>
             <div class="config-grid">
               {% for item in items %}
               {% set setting = item.setting %}
               <label class="config-field">
-                <span>{{ setting.label }}</span>
+                <span class="field-label">{{ setting.label }}</span>
                 {% if setting.input_type == "checkbox" %}
-                <input
-                  type="checkbox"
-                  name="{{ setting.modulo }}__{{ setting.parametro }}"
-                  value="true"
-                  {% if item.value in ["true", "1", "yes", "on"] %}checked{% endif %}
-                >
+                <span class="checkbox-row">
+                  <input
+                    type="checkbox"
+                    name="{{ setting.modulo }}__{{ setting.parametro }}"
+                    value="true"
+                    {% if item.value in ["true", "1", "yes", "on"] %}checked{% endif %}
+                  >
+                  <span>Activo</span>
+                </span>
                 {% else %}
                 <input
                   type="{{ setting.input_type }}"

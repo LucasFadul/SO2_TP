@@ -9,10 +9,12 @@
   <body>
     <main class="page">
       <header class="page-header">
-        <h1>hips_rocky</h1>
-        <p>Dashboard de alarmas HIPS</p>
+        <div>
+          <h1>hips_rocky</h1>
+          <p>Dashboard de alarmas HIPS</p>
+        </div>
         <nav class="page-nav">
-          <a href="/">Alarmas</a>
+          <a class="active" href="/">Alarmas</a>
           <a href="/config">Configuración</a>
         </nav>
       </header>
@@ -43,40 +45,42 @@
           <button type="submit">Filtrar</button>
           <a class="clear-link" href="/">Limpiar</a>
         </form>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Timestamp</th>
-              <th>Tipo</th>
-              <th>IP origen</th>
-              <th>Modulo</th>
-              <th>Severidad</th>
-              <th>Detalle</th>
-              <th>Acción tomada</th>
-              <th>Resuelta</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for alarm in alarms %}
-            <tr>
-              <td>{{ alarm.id }}</td>
-              <td>{{ alarm.timestamp }}</td>
-              <td>{{ alarm.tipo_alarma }}</td>
-              <td>{{ alarm.ip_origen or "N/A" }}</td>
-              <td>{{ alarm.modulo }}</td>
-              <td>{{ alarm.severidad }}</td>
-              <td>{{ alarm.detalle }}</td>
-              <td>{{ alarm.accion_tomada or "N/A" }}</td>
-              <td>{{ "si" if alarm.resuelta else "no" }}</td>
-            </tr>
-            {% else %}
-            <tr>
-              <td colspan="9">No hay alarmas registradas.</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+        <div class="table-shell">
+          <table class="alarms-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Timestamp</th>
+                <th>Tipo</th>
+                <th>IP origen</th>
+                <th>Módulo</th>
+                <th>Severidad</th>
+                <th>Detalle</th>
+                <th>Acción tomada</th>
+                <th>Resuelta</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for alarm in alarms %}
+              <tr>
+                <td class="cell-id">{{ alarm.id }}</td>
+                <td class="cell-time">{{ alarm.timestamp }}</td>
+                <td><span class="badge badge-type">{{ alarm.tipo_alarma }}</span></td>
+                <td>{{ alarm.ip_origen or "N/A" }}</td>
+                <td><span class="badge badge-module">{{ alarm.modulo }}</span></td>
+                <td><span class="badge severity severity-{{ alarm.severidad|lower }}">{{ alarm.severidad }}</span></td>
+                <td class="cell-detail">{{ alarm.detalle }}</td>
+                <td>{{ alarm.accion_tomada or "N/A" }}</td>
+                <td>{{ "sí" if alarm.resuelta else "no" }}</td>
+              </tr>
+              {% else %}
+              <tr>
+                <td class="empty-state" colspan="9">No hay alarmas registradas.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </section>
     </main>
   </body>
