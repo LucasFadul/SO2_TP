@@ -29,6 +29,18 @@ body {
   color: #5b6573;
 }
 
+.page-nav {
+  display: flex;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.page-nav a {
+  color: #1f5a8a;
+  text-decoration: none;
+  font-size: 14px;
+}
+
 .panel {
   background: #ffffff;
   border: 1px solid #d9dee7;
@@ -44,6 +56,12 @@ body {
 .error {
   margin: 0 0 14px;
   color: #9f1d1d;
+  font-size: 14px;
+}
+
+.success {
+  margin: 0 0 14px;
+  color: #1b6b3a;
   font-size: 14px;
 }
 
@@ -109,4 +127,69 @@ td {
 
 th {
   background: #eef2f7;
+}
+
+.config-form {
+  display: grid;
+  gap: 20px;
+}
+
+.config-group {
+  border-top: 1px solid #e6e9ef;
+  padding-top: 16px;
+}
+
+.config-group h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.config-field {
+  display: grid;
+  gap: 5px;
+  font-size: 13px;
+  color: #5b6573;
+}
+
+.config-field input[type="text"],
+.config-field input[type="number"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid #cfd6e2;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #18202a;
+  font: inherit;
+}
+
+.config-field input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+
+.config-field small {
+  color: #7a8492;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.form-actions button {
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1px solid #1f5a8a;
+  border-radius: 6px;
+  background: #1f5a8a;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
 }

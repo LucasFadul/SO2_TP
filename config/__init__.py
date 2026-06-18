@@ -1,0 +1,2 @@
+"""Configuracion del proyecto HIPS."""
+

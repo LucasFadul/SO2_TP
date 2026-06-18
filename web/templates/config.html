@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>hips_rocky - configuracion</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+  </head>
+  <body>
+    <main class="page">
+      <header class="page-header">
+        <h1>hips_rocky</h1>
+        <p>Configuración de módulos HIPS</p>
+        <nav class="page-nav">
+          <a href="/">Alarmas</a>
+          <a href="/config">Configuración</a>
+        </nav>
+      </header>
+
+      <section class="panel">
+        <h2>Parámetros</h2>
+        {% if db_error %}
+        <p class="error">No se pudo leer PostgreSQL: {{ db_error }}</p>
+        {% endif %}
+        {% if saved %}
+        <p class="success">Configuración guardada.</p>
+        {% endif %}
+
+        <form method="post" class="config-form">
+          {% for modulo, items in grouped_settings.items() %}
+          <section class="config-group">
+            <h3>{{ modulo }}</h3>
+            <div class="config-grid">
+              {% for item in items %}
+              {% set setting = item.setting %}
+              <label class="config-field">
+                <span>{{ setting.label }}</span>
+                {% if setting.input_type == "checkbox" %}
+                <input
+                  type="checkbox"
+                  name="{{ setting.modulo }}__{{ setting.parametro }}"
+                  value="true"
+                  {% if item.value in ["true", "1", "yes", "on"] %}checked{% endif %}
+                >
+                {% else %}
+                <input
+                  type="{{ setting.input_type }}"
+                  name="{{ setting.modulo }}__{{ setting.parametro }}"
+                  value="{{ item.value }}"
+                >
+                {% endif %}
+                <small>{{ setting.parametro }}</small>
+              </label>
+              {% endfor %}
+            </div>
+          </section>
+          {% endfor %}
+
+          <div class="form-actions">
+            <button type="submit">Guardar configuración</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

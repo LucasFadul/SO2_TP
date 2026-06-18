@@ -131,6 +131,21 @@ def get_module_config(modulo: str, parametro: str) -> Optional[str]:
             return str(row[0]) if row else None
 
 
+def list_module_configs() -> dict[tuple[str, str], str]:
+    query = """
+        SELECT modulo, parametro, valor
+        FROM configuracion_modulos
+        WHERE activo = true
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query)
+            return {
+                (str(row[0]), str(row[1])): str(row[2])
+                for row in cur.fetchall()
+            }
+
+
 def set_module_config(modulo: str, parametro: str, valor: object) -> None:
     query = """
         INSERT INTO configuracion_modulos (modulo, parametro, valor)

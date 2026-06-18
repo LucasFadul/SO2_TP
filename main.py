@@ -9,6 +9,7 @@ from typing import List, Mapping
 
 from dotenv import load_dotenv
 
+from config.module_settings import SETTINGS_BY_KEY
 from db.models import (
     get_module_config,
     insert_alarm,
@@ -32,13 +33,6 @@ from prevention.user_actions import lock_user
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 DEFAULT_SECURE_LOG_PATH = Path("/var/log/secure")
-DEFAULT_LOG_PATHS = (
-    DEFAULT_SECURE_LOG_PATH,
-    Path("/var/log/httpd/access_log"),
-    Path("/var/log/httpd/access.log"),
-    Path("/var/log/nginx/access.log"),
-    Path("/var/log/maillog"),
-)
 
 
 def read_sshd_journal(since: str) -> List[str]:
@@ -70,10 +64,7 @@ def read_new_log_lines(path: Path, modulo: str) -> List[str]:
 
 
 def configured_log_paths() -> List[Path]:
-    raw_paths = os.getenv("HIPS_LOG_ANALYZER_PATHS")
-    if not raw_paths:
-        return list(DEFAULT_LOG_PATHS)
-    return [Path(path.strip()) for path in raw_paths.split(",") if path.strip()]
+    return [Path(path) for path in config_csv("log_analyzer", "paths")]
 
 
 def read_configured_logs() -> tuple[List[str], List[str]]:
@@ -95,7 +86,7 @@ def read_configured_logs() -> tuple[List[str], List[str]]:
 
 
 def read_journal_fallback() -> tuple[List[str], str]:
-    since = os.getenv("HIPS_SSH_JOURNAL_SINCE", "10 minutes ago")
+    since = config_value("log_analyzer", "ssh_journal_since")
     return read_sshd_journal(since), f"journalctl -u sshd --since '{since}'"
 
 
@@ -131,19 +122,33 @@ def run_prevention(alarm: Mapping[str, object], dry_run: bool) -> dict | None:
     return None
 
 
-def env_bool(name: str, default: bool = False) -> bool:
-    raw_value = os.getenv(name, str(default)).lower()
-    return raw_value in {"1", "true", "yes", "on"}
+def config_value(modulo: str, parametro: str) -> str:
+    setting = SETTINGS_BY_KEY[(modulo, parametro)]
+    try:
+        db_value = get_module_config(modulo, parametro)
+    except Exception:
+        db_value = None
+    return db_value or os.getenv(setting.env_name, setting.default)
+
+
+def config_bool(modulo: str, parametro: str) -> bool:
+    return config_value(modulo, parametro).lower() in {"1", "true", "yes", "on"}
+
+
+def config_csv(modulo: str, parametro: str) -> list[str]:
+    raw_value = config_value(modulo, parametro)
+    return [value.strip() for value in raw_value.split(",") if value.strip()]
 
 
 def run_file_integrity() -> List[dict]:
-    return run_file_integrity_check()
+    files = config_csv("file_integrity", "paths")
+    return run_file_integrity_check(files=files)
 
 
 def run_log_analyzer() -> List[dict]:
-    failed_limit = int(os.getenv("HIPS_FAILED_LOGIN_LIMIT", "5"))
-    http_limit = int(os.getenv("HIPS_HTTP_404_LIMIT", "30"))
-    mail_limit = int(os.getenv("HIPS_MAIL_ANOMALY_LIMIT", "10"))
+    failed_limit = int(config_value("log_analyzer", "failed_login_limit"))
+    http_limit = int(config_value("log_analyzer", "http_404_limit"))
+    mail_limit = int(config_value("log_analyzer", "mail_anomaly_limit"))
 
     lines, sources = read_configured_logs()
     if not lines:
@@ -162,37 +167,40 @@ def run_log_analyzer() -> List[dict]:
 
 
 def run_sniffer_detect() -> List[dict]:
-    authorized = env_bool("HIPS_SNIFFER_AUTHORIZED", False)
-    return run_sniffer_check(authorized=authorized)
+    authorized = config_bool("sniffer_detect", "authorized")
+    process_names = config_csv("sniffer_detect", "process_names")
+    return run_sniffer_check(authorized=authorized, process_names=process_names)
 
 
 def run_mail_queue() -> List[dict]:
-    limit = int(os.getenv("HIPS_MAIL_QUEUE_LIMIT", "100"))
+    limit = int(config_value("mail_queue", "queue_limit"))
     return run_mail_queue_check(limit=limit)
 
 
 def run_tmp_monitor() -> List[dict]:
-    tmp_dir = os.getenv("HIPS_TMP_DIR", "/tmp")
+    tmp_dir = config_value("tmp_monitor", "tmp_dir")
     return run_tmp_check(tmp_dir=tmp_dir)
 
 
 def run_ddos_detect() -> List[dict]:
-    log_path = os.getenv("HIPS_DDOS_LOG_PATH", "data/dns.log")
-    request_limit = int(os.getenv("HIPS_DDOS_REQUEST_LIMIT", "1000"))
+    log_path = config_value("ddos_detect", "log_path")
+    request_limit = int(config_value("ddos_detect", "request_limit"))
     return run_ddos_check(log_path=log_path, request_limit=request_limit)
 
 
 def run_cron_monitor() -> List[dict]:
-    return run_cron_check()
+    paths = config_csv("cron_monitor", "paths")
+    return run_cron_check(paths=paths)
 
 
 def run_access_monitor() -> List[dict]:
-    failed_limit = int(os.getenv("HIPS_ACCESS_FAILED_LIMIT", "5"))
-    distinct_user_limit = int(os.getenv("HIPS_ACCESS_DISTINCT_USER_LIMIT", "5"))
-    if not DEFAULT_SECURE_LOG_PATH.exists():
+    failed_limit = int(config_value("access_monitor", "failed_limit"))
+    distinct_user_limit = int(config_value("access_monitor", "distinct_user_limit"))
+    access_log_path = Path(config_value("access_monitor", "log_path"))
+    if not access_log_path.exists():
         return []
     try:
-        lines = read_new_log_lines(DEFAULT_SECURE_LOG_PATH, "access_monitor")
+        lines = read_new_log_lines(access_log_path, "access_monitor")
     except OSError:
         return []
     return analyze_access_lines(
@@ -203,7 +211,7 @@ def run_access_monitor() -> List[dict]:
 
 
 def allowed_users_from_env() -> set[str]:
-    raw_users = os.getenv("HIPS_ALLOWED_USERS")
+    raw_users = config_value("users_monitor", "allowed_users")
     if raw_users:
         return {user.strip() for user in raw_users.split(",") if user.strip()}
 
@@ -211,18 +219,10 @@ def allowed_users_from_env() -> set[str]:
     return {default_user} if default_user else set()
 
 
-def csv_env(name: str, default: str = "") -> list[str]:
-    raw_value = os.getenv(name, default)
-    return [value.strip() for value in raw_value.split(",") if value.strip()]
-
-
 def run_users_monitor() -> List[dict]:
     allowed_users = allowed_users_from_env()
-    allowed_networks = csv_env(
-        "HIPS_ALLOWED_NETWORKS",
-        "192.168.0.0/16,10.0.0.0/8,172.16.0.0/12",
-    )
-    max_sessions = int(os.getenv("HIPS_USERS_MAX_SESSIONS", "2"))
+    allowed_networks = config_csv("users_monitor", "allowed_networks")
+    max_sessions = int(config_value("users_monitor", "max_sessions"))
     alarms = run_users_check(
         allowed_users=allowed_users,
         allowed_networks=allowed_networks,
@@ -232,9 +232,9 @@ def run_users_monitor() -> List[dict]:
 
 
 def run_process_monitor() -> List[dict]:
-    cpu_limit = float(os.getenv("HIPS_CPU_LIMIT_PERCENT", "90"))
-    memory_limit = float(os.getenv("HIPS_MEMORY_LIMIT_PERCENT", "90"))
-    process_whitelist = csv_env("HIPS_PROCESS_WHITELIST", "postgres,rsync,find,dnf")
+    cpu_limit = float(config_value("process_monitor", "cpu_limit_percent"))
+    memory_limit = float(config_value("process_monitor", "memory_limit_percent"))
+    process_whitelist = config_csv("process_monitor", "process_whitelist")
     alarms = run_process_check(
         cpu_limit=cpu_limit,
         memory_limit=memory_limit,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, Optional
 
 
 DEFAULT_FILES = ("/etc/passwd", "/etc/shadow")
@@ -50,5 +50,8 @@ def check_integrity(
     return alarms
 
 
-def run_check() -> List[dict]:
-    return check_integrity(baseline={})
+def run_check(
+    baseline: Optional[Dict[str, str]] = None,
+    files: Iterable[str] = DEFAULT_FILES,
+) -> List[dict]:
+    return check_integrity(baseline=baseline or {}, files=files)

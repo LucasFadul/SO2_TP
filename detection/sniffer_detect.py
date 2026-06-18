@@ -10,7 +10,10 @@ SNIFFER_PROCESS_NAMES = ("tcpdump", "wireshark", "tshark", "dumpcap", "ethereal"
 
 
 def command_output(command: list[str]) -> str:
-    result = subprocess.run(command, check=False, text=True, capture_output=True)
+    try:
+        result = subprocess.run(command, check=False, text=True, capture_output=True)
+    except FileNotFoundError:
+        return ""
     return result.stdout
 
 
@@ -37,7 +40,10 @@ def detect_sniffer_processes(ps_output: str, names: Iterable[str] = SNIFFER_PROC
     return matches
 
 
-def run_check(authorized: bool = False) -> List[dict]:
+def run_check(
+    authorized: bool = False,
+    process_names: Iterable[str] = SNIFFER_PROCESS_NAMES,
+) -> List[dict]:
     if authorized:
         return []
 
@@ -56,7 +62,7 @@ def run_check(authorized: bool = False) -> List[dict]:
             }
         )
 
-    for process_line in detect_sniffer_processes(ps_output):
+    for process_line in detect_sniffer_processes(ps_output, names=process_names):
         alarms.append(
             {
                 "tipo_alarma": "SNIFFER_DETECTADO",

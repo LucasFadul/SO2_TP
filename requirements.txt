@@ -3,4 +3,5 @@ uvicorn[standard]
 jinja2
 psycopg[binary]
 python-dotenv
+python-multipart
 pytest

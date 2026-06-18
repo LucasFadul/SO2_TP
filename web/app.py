@@ -5,19 +5,19 @@ from __future__ import annotations
 from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 
-from db.models import list_alarms
+from config.module_settings import MODULE_OPTIONS, SETTINGS
+from db.models import list_alarms, list_module_configs, set_module_config
 
 
 BASE_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = BASE_DIR.parent
 load_dotenv(PROJECT_ROOT / ".env")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
-MODULE_OPTIONS = ("log_analyzer", "users_monitor", "process_monitor")
 RANGE_OPTIONS = {
     "": "Todo",
     "hora": "Ultima hora",
@@ -57,6 +57,52 @@ def create_app() -> FastAPI:
                 "selected_range": selected_range,
             },
         )
+
+    @app.get("/config", response_class=HTMLResponse)
+    def config_page(request: Request, saved: str = ""):
+        db_error = None
+        config_values = {}
+        try:
+            config_values = list_module_configs()
+        except Exception as exc:
+            db_error = str(exc)
+
+        grouped_settings: dict[str, list[dict]] = {}
+        for setting in SETTINGS:
+            grouped_settings.setdefault(setting.modulo, []).append(
+                {
+                    "setting": setting,
+                    "value": config_values.get(
+                        (setting.modulo, setting.parametro),
+                        setting.default,
+                    ),
+                }
+            )
+
+        return templates.TemplateResponse(
+            request,
+            "config.html",
+            {
+                "db_error": db_error,
+                "saved": saved == "1",
+                "grouped_settings": grouped_settings,
+            },
+        )
+
+    @app.post("/config")
+    async def save_config(request: Request):
+        form = await request.form()
+        for setting in SETTINGS:
+            field_name = f"{setting.modulo}__{setting.parametro}"
+            if setting.input_type == "checkbox":
+                value = "true" if field_name in form else "false"
+            else:
+                value = str(form.get(field_name, setting.default)).strip()
+            if not value:
+                value = setting.default
+            set_module_config(setting.modulo, setting.parametro, value)
+
+        return RedirectResponse("/config?saved=1", status_code=303)
 
     @app.get("/health")
     def health():

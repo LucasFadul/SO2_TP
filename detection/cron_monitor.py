@@ -7,6 +7,7 @@ from typing import Iterable, List
 
 
 SUSPICIOUS_TOKENS = ("curl ", "wget ", "nc ", "bash -i", "/tmp/", "python -c", "base64")
+DEFAULT_CRON_PATHS = ("/etc/crontab", "/var/spool/cron/root")
 
 
 def scan_cron_files(paths: Iterable[str]) -> List[dict]:
@@ -33,5 +34,5 @@ def scan_cron_files(paths: Iterable[str]) -> List[dict]:
     return alarms
 
 
-def run_check() -> List[dict]:
-    return scan_cron_files(("/etc/crontab", "/var/spool/cron/root"))
+def run_check(paths: Iterable[str] = DEFAULT_CRON_PATHS) -> List[dict]:
+    return scan_cron_files(paths)
