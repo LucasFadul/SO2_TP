@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import subprocess
 from pathlib import Path
-from typing import Iterable, List, Mapping
+from typing import List, Mapping
 
 from dotenv import load_dotenv
 
@@ -79,7 +79,6 @@ def read_configured_logs() -> tuple[List[str], List[str]]:
         try:
             new_lines = read_new_log_lines(path)
         except PermissionError:
-            print(f"No se pudo leer {path}: permiso denegado.")
             continue
         if new_lines:
             lines.extend(new_lines)
@@ -98,25 +97,15 @@ def register_alarm_with_prevention(
     prevention_dry_run: bool,
 ) -> None:
     alarm_id = insert_alarm(alarm)
-    print(
-        "Insertada: "
-        f"{alarm['tipo_alarma']} | {alarm.get('ip_origen') or 'N/A'} | "
-        f"{alarm['modulo']} | {alarm['detalle']}"
-    )
 
     result = run_prevention(alarm, dry_run=prevention_dry_run)
     if not result:
         return
 
-    action_id = insert_prevention_action(
+    insert_prevention_action(
         alarma_id=alarm_id,
         accion=result["accion"],
         resultado=str(result),
-    )
-    print(
-        "Prevencion registrada: "
-        f"accion_id={action_id} | alarma_id={alarm_id} | "
-        f"{result['accion']} | dry_run={result['dry_run']}"
     )
 
 
@@ -153,11 +142,6 @@ def run_log_analyzer() -> List[dict]:
         mail_anomaly_limit=mail_limit,
     )
 
-    print(
-        "Modulo log_analyzer: "
-        f"fuentes={', '.join(sources) or 'N/A'} "
-        f"lineas leidas={len(lines)} alarmas={len(alarms)}"
-    )
     return alarms
 
 
@@ -187,13 +171,6 @@ def run_users_monitor() -> List[dict]:
         allowed_networks=allowed_networks,
         max_sessions=max_sessions,
     )
-    print(
-        "Modulo users_monitor: "
-        f"usuarios_permitidos={','.join(sorted(allowed_users)) or 'sin filtro'} "
-        f"redes_permitidas={','.join(allowed_networks)} "
-        f"max_sesiones={max_sessions} "
-        f"alarmas={len(alarms)}"
-    )
     return alarms
 
 
@@ -206,29 +183,46 @@ def run_process_monitor() -> List[dict]:
         memory_limit=memory_limit,
         process_whitelist=process_whitelist,
     )
-    print(
-        "Modulo process_monitor: "
-        f"cpu_limit={cpu_limit} memory_limit={memory_limit} "
-        f"whitelist={','.join(process_whitelist)} alarmas={len(alarms)}"
-    )
     return alarms
 
 
-def run_enabled_modules() -> Iterable[dict]:
-    yield from run_log_analyzer()
-    yield from run_users_monitor()
-    yield from run_process_monitor()
+def alarm_word(count: int) -> str:
+    return "alarma" if count == 1 else "alarmas"
+
+
+def print_summary(module_alarms: Mapping[str, List[dict]]) -> None:
+    registered_alarms = [
+        alarm for alarms in module_alarms.values() for alarm in alarms
+    ]
+
+    print("HIPS iniciado")
+    for module_name, alarms in module_alarms.items():
+        print(f"{module_name}: {len(alarms)} {alarm_word(len(alarms))}")
+
+    print()
+    print(f"Alarmas registradas: {len(registered_alarms)}")
+    for alarm in registered_alarms:
+        print(f"- {alarm['tipo_alarma']} | {alarm['modulo']}")
+
+    print()
+    print("Ver dashboard para detalles.")
 
 
 def main() -> None:
     load_dotenv(PROJECT_ROOT / ".env")
     prevention_dry_run = os.getenv("HIPS_PREVENTION_DRY_RUN", "true").lower() == "true"
 
-    alarms = list(run_enabled_modules())
-    print(f"Alarmas detectadas: {len(alarms)}")
+    module_alarms = {
+        "log_analyzer": run_log_analyzer(),
+        "users_monitor": run_users_monitor(),
+        "process_monitor": run_process_monitor(),
+    }
 
-    for alarm in alarms:
-        register_alarm_with_prevention(alarm, prevention_dry_run=prevention_dry_run)
+    for alarms in module_alarms.values():
+        for alarm in alarms:
+            register_alarm_with_prevention(alarm, prevention_dry_run=prevention_dry_run)
+
+    print_summary(module_alarms)
 
 
 if __name__ == "__main__":
