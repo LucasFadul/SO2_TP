@@ -4,23 +4,29 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>hips_rocky - configuracion</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}?v=3">
   </head>
   <body>
     <main class="page">
-      <header class="page-header">
-        <div>
+      <header class="app-header">
+        <div class="brand-block">
           <h1>hips_rocky</h1>
           <p>Configuración de módulos HIPS</p>
         </div>
-        <nav class="page-nav">
+        <nav class="page-nav" aria-label="Navegación principal">
           <a href="/">Alarmas</a>
           <a class="active" href="/config">Configuración</a>
         </nav>
       </header>
 
       <section class="panel">
-        <h2>Parámetros</h2>
+        <div class="section-heading">
+          <div>
+            <h2>Parámetros</h2>
+            <p>Umbrales y rutas usados por los módulos</p>
+          </div>
+          <span class="status-chip">10 módulos</span>
+        </div>
         {% if db_error %}
         <p class="error">No se pudo leer PostgreSQL: {{ db_error }}</p>
         {% endif %}
@@ -29,40 +35,52 @@
         {% endif %}
 
         <form method="post" class="config-form">
-          {% for modulo, items in grouped_settings.items() %}
-          <section class="config-group">
-            <div class="config-group-header">
-              <h3>{{ modulo }}</h3>
-              <span>{{ items|length }} parámetros</span>
-            </div>
-            <div class="config-grid">
-              {% for item in items %}
-              {% set setting = item.setting %}
-              <label class="config-field">
-                <span class="field-label">{{ setting.label }}</span>
-                {% if setting.input_type == "checkbox" %}
-                <span class="checkbox-row">
-                  <input
-                    type="checkbox"
-                    name="{{ setting.modulo }}__{{ setting.parametro }}"
-                    value="true"
-                    {% if item.value in ["true", "1", "yes", "on"] %}checked{% endif %}
-                  >
-                  <span>Activo</span>
-                </span>
-                {% else %}
-                <input
-                  type="{{ setting.input_type }}"
-                  name="{{ setting.modulo }}__{{ setting.parametro }}"
-                  value="{{ item.value }}"
-                >
-                {% endif %}
-                <small>{{ setting.parametro }}</small>
-              </label>
+          <div class="config-layout">
+            <aside class="module-index">
+              {% for modulo, items in grouped_settings.items() %}
+              <a href="#{{ modulo }}">{{ modulo }}</a>
+              {% endfor %}
+            </aside>
+
+            <div class="config-sections">
+              {% for modulo, items in grouped_settings.items() %}
+              <section class="config-group" id="{{ modulo }}">
+                <div class="config-group-header">
+                  <div>
+                    <h3>{{ modulo }}</h3>
+                    <p>{{ items|length }} parámetros configurables</p>
+                  </div>
+                </div>
+                <div class="config-grid">
+                  {% for item in items %}
+                  {% set setting = item.setting %}
+                  <label class="config-field">
+                    <span class="field-label">{{ setting.label }}</span>
+                    {% if setting.input_type == "checkbox" %}
+                    <span class="checkbox-row">
+                      <input
+                        type="checkbox"
+                        name="{{ setting.modulo }}__{{ setting.parametro }}"
+                        value="true"
+                        {% if item.value in ["true", "1", "yes", "on"] %}checked{% endif %}
+                      >
+                      <span>Activo</span>
+                    </span>
+                    {% else %}
+                    <input
+                      type="{{ setting.input_type }}"
+                      name="{{ setting.modulo }}__{{ setting.parametro }}"
+                      value="{{ item.value }}"
+                    >
+                    {% endif %}
+                    <small>{{ setting.parametro }}</small>
+                  </label>
+                  {% endfor %}
+                </div>
+              </section>
               {% endfor %}
             </div>
-          </section>
-          {% endfor %}
+          </div>
 
           <div class="form-actions">
             <button type="submit">Guardar configuración</button>
