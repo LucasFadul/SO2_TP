@@ -3,14 +3,14 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>hips_rocky - configuracion</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}?v=4">
+    <title>HIPS Rocky - Configuracion</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}?v=7">
   </head>
   <body>
     <main class="page">
       <header class="app-header">
         <div class="brand-block">
-          <h1>hips_rocky</h1>
+          <h1>HIPS Rocky</h1>
           <p>Configuración de módulos HIPS</p>
         </div>
         <nav class="page-nav" aria-label="Navegación principal">
@@ -25,7 +25,10 @@
             <h2>Parámetros</h2>
             <p>Umbrales y rutas usados por los módulos</p>
           </div>
-          <span class="status-chip">10 módulos</span>
+          <div class="section-actions">
+            <span class="status-chip">10 módulos</span>
+            <button class="toggle-all-button" type="button" id="toggle-config-sections">Cerrar</button>
+          </div>
         </div>
         {% if db_error %}
         <p class="error">No se pudo leer PostgreSQL: {{ db_error }}</p>
@@ -34,22 +37,16 @@
         <p class="success">Configuración guardada.</p>
         {% endif %}
 
-        <div class="module-shortcuts" aria-label="Accesos rápidos a módulos">
-          {% for modulo, items in grouped_settings.items() %}
-          <a href="#{{ modulo }}">{{ modulo }}</a>
-          {% endfor %}
-        </div>
-
         <form method="post" class="config-form">
           <div class="config-sections">
-            {% for modulo, items in grouped_settings.items() %}
-            <details class="config-section" id="{{ modulo }}" open>
+            {% for module in grouped_settings %}
+            <details class="config-section" id="{{ module.modulo }}" open>
               <summary>
-                <span class="module-name">{{ modulo }}</span>
-                <span class="module-count">{{ items|length }} parámetros</span>
+                <span class="module-name">{{ module.label }}</span>
+                <span class="module-count">{{ module.items|length }} parámetros</span>
               </summary>
               <div class="config-grid">
-                {% for item in items %}
+                {% for item in module.items %}
                 {% set setting = item.setting %}
                 <label class="config-field">
                   <span class="field-label">{{ setting.label }}</span>
@@ -70,7 +67,7 @@
                     value="{{ item.value }}"
                   >
                   {% endif %}
-                  <small>{{ setting.parametro }}</small>
+                  <small>{{ setting.parametro.replace("_", " ") }}</small>
                 </label>
               {% endfor %}
               </div>
@@ -84,5 +81,26 @@
         </form>
       </section>
     </main>
+    <script>
+      const toggleButton = document.getElementById("toggle-config-sections");
+      const configSections = Array.from(document.querySelectorAll(".config-section"));
+
+      function updateToggleButton() {
+        const allOpen = configSections.every((section) => section.open);
+        toggleButton.textContent = allOpen ? "Cerrar" : "Abrir";
+      }
+
+      toggleButton.addEventListener("click", () => {
+        const allOpen = configSections.every((section) => section.open);
+        configSections.forEach((section) => {
+          section.open = !allOpen;
+        });
+        updateToggleButton();
+      });
+
+      configSections.forEach((section) => {
+        section.addEventListener("toggle", updateToggleButton);
+      });
+    </script>
   </body>
 </html>

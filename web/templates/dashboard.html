@@ -3,14 +3,14 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>hips_rocky</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}?v=3">
+    <title>HIPS Rocky</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}?v=7">
   </head>
   <body>
     <main class="page">
       <header class="app-header">
         <div class="brand-block">
-          <h1>hips_rocky</h1>
+          <h1>HIPS Rocky</h1>
           <p>Dashboard de alarmas HIPS</p>
         </div>
         <nav class="page-nav" aria-label="Navegación principal">
@@ -37,7 +37,7 @@
               <select name="modulo" onchange="this.form.submit()">
                 <option value="" {% if not selected_module %}selected{% endif %}>Todos</option>
                 {% for module in module_options %}
-                <option value="{{ module }}" {% if selected_module == module %}selected{% endif %}>{{ module }}</option>
+                <option value="{{ module.value }}" {% if selected_module == module.value %}selected{% endif %}>{{ module.label }}</option>
                 {% endfor %}
               </select>
             </label>
@@ -74,7 +74,7 @@
                 <td class="cell-time">{{ alarm.timestamp }}</td>
                 <td><span class="badge badge-type">{{ alarm.tipo_alarma }}</span></td>
                 <td>{{ alarm.ip_origen or "N/A" }}</td>
-                <td><span class="badge badge-module">{{ alarm.modulo }}</span></td>
+                <td><span class="badge badge-module">{{ alarm.modulo|module_label }}</span></td>
                 <td><span class="badge severity severity-{{ alarm.severidad|lower }}">{{ alarm.severidad }}</span></td>
                 <td class="cell-detail">{{ alarm.detalle }}</td>
                 <td>{{ alarm.accion_tomada or "N/A" }}</td>

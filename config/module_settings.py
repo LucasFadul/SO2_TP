@@ -43,3 +43,19 @@ SETTINGS: tuple[ModuleSetting, ...] = (
 SETTINGS_BY_KEY = {(setting.modulo, setting.parametro): setting for setting in SETTINGS}
 MODULE_OPTIONS = tuple(dict.fromkeys(setting.modulo for setting in SETTINGS))
 
+MODULE_LABELS = {
+    "file_integrity": "Integridad de Archivos",
+    "users_monitor": "Usuarios Conectados",
+    "sniffer_detect": "Sniffers de Red",
+    "log_analyzer": "Analisis de Logs",
+    "mail_queue": "Cola de Correo",
+    "process_monitor": "Procesos de Alto Consumo",
+    "tmp_monitor": "Directorio Temporal",
+    "ddos_detect": "Deteccion DDoS",
+    "cron_monitor": "Tareas Cron",
+    "access_monitor": "Accesos Invalidos",
+}
+
+
+def module_label(modulo: str) -> str:
+    return MODULE_LABELS.get(modulo, modulo.replace("_", " ").title())

@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 
-from config.module_settings import MODULE_OPTIONS, SETTINGS
+from config.module_settings import MODULE_OPTIONS, SETTINGS, module_label
 from db.models import list_alarms, list_module_configs, set_module_config
 
 
@@ -18,6 +18,7 @@ BASE_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = BASE_DIR.parent
 load_dotenv(PROJECT_ROOT / ".env")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+templates.env.filters["module_label"] = module_label
 RANGE_OPTIONS = {
     "": "Todo",
     "hora": "Ultima hora",
@@ -51,7 +52,10 @@ def create_app() -> FastAPI:
             {
                 "alarms": alarms,
                 "db_error": db_error,
-                "module_options": MODULE_OPTIONS,
+                "module_options": [
+                    {"value": module, "label": module_label(module)}
+                    for module in MODULE_OPTIONS
+                ],
                 "range_options": RANGE_OPTIONS,
                 "selected_module": selected_module,
                 "selected_range": selected_range,
@@ -67,9 +71,9 @@ def create_app() -> FastAPI:
         except Exception as exc:
             db_error = str(exc)
 
-        grouped_settings: dict[str, list[dict]] = {}
+        settings_by_module: dict[str, list[dict]] = {}
         for setting in SETTINGS:
-            grouped_settings.setdefault(setting.modulo, []).append(
+            settings_by_module.setdefault(setting.modulo, []).append(
                 {
                     "setting": setting,
                     "value": config_values.get(
@@ -78,6 +82,14 @@ def create_app() -> FastAPI:
                     ),
                 }
             )
+        grouped_settings = [
+            {
+                "modulo": modulo,
+                "label": module_label(modulo),
+                "items": items,
+            }
+            for modulo, items in settings_by_module.items()
+        ]
 
         return templates.TemplateResponse(
             request,
