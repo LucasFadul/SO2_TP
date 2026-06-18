@@ -15,8 +15,15 @@ from db.models import (
     insert_prevention_action,
     set_module_config,
 )
+from detection.access_monitor import analyze_access_lines
+from detection.cron_monitor import run_check as run_cron_check
+from detection.ddos_detect import run_check as run_ddos_check
+from detection.file_integrity import run_check as run_file_integrity_check
 from detection.log_analyzer import analyze_lines
+from detection.mail_queue import run_check as run_mail_queue_check
 from detection.process_monitor import run_check as run_process_check
+from detection.sniffer_detect import run_check as run_sniffer_check
+from detection.tmp_monitor import run_check as run_tmp_check
 from detection.users_monitor import run_check as run_users_check
 from prevention.firewall import block_ip
 from prevention.process_kill import kill_process
@@ -46,8 +53,8 @@ def offset_param(path: Path) -> str:
     return f"log_offset:{path}"
 
 
-def read_new_log_lines(path: Path) -> List[str]:
-    offset_value = get_module_config("log_analyzer", offset_param(path))
+def read_new_log_lines(path: Path, modulo: str) -> List[str]:
+    offset_value = get_module_config(modulo, offset_param(path))
     offset = int(offset_value) if offset_value else 0
     size = path.stat().st_size
     if offset > size:
@@ -58,7 +65,7 @@ def read_new_log_lines(path: Path) -> List[str]:
         data = file_obj.read()
         new_offset = file_obj.tell()
 
-    set_module_config("log_analyzer", offset_param(path), new_offset)
+    set_module_config(modulo, offset_param(path), new_offset)
     return data.splitlines()
 
 
@@ -77,8 +84,8 @@ def read_configured_logs() -> tuple[List[str], List[str]]:
         if not path.exists():
             continue
         try:
-            new_lines = read_new_log_lines(path)
-        except PermissionError:
+            new_lines = read_new_log_lines(path, "log_analyzer")
+        except OSError:
             continue
         if new_lines:
             lines.extend(new_lines)
@@ -112,7 +119,7 @@ def register_alarm_with_prevention(
 def run_prevention(alarm: Mapping[str, object], dry_run: bool) -> dict | None:
     modulo = alarm.get("modulo")
 
-    if modulo == "log_analyzer" and alarm.get("ip_origen"):
+    if modulo in {"log_analyzer", "ddos_detect", "access_monitor"} and alarm.get("ip_origen"):
         return block_ip(str(alarm["ip_origen"]), dry_run=dry_run)
 
     if modulo == "process_monitor" and alarm.get("pid"):
@@ -122,6 +129,15 @@ def run_prevention(alarm: Mapping[str, object], dry_run: bool) -> dict | None:
         return lock_user(str(alarm["usuario"]), dry_run=dry_run)
 
     return None
+
+
+def env_bool(name: str, default: bool = False) -> bool:
+    raw_value = os.getenv(name, str(default)).lower()
+    return raw_value in {"1", "true", "yes", "on"}
+
+
+def run_file_integrity() -> List[dict]:
+    return run_file_integrity_check()
 
 
 def run_log_analyzer() -> List[dict]:
@@ -143,6 +159,47 @@ def run_log_analyzer() -> List[dict]:
     )
 
     return alarms
+
+
+def run_sniffer_detect() -> List[dict]:
+    authorized = env_bool("HIPS_SNIFFER_AUTHORIZED", False)
+    return run_sniffer_check(authorized=authorized)
+
+
+def run_mail_queue() -> List[dict]:
+    limit = int(os.getenv("HIPS_MAIL_QUEUE_LIMIT", "100"))
+    return run_mail_queue_check(limit=limit)
+
+
+def run_tmp_monitor() -> List[dict]:
+    tmp_dir = os.getenv("HIPS_TMP_DIR", "/tmp")
+    return run_tmp_check(tmp_dir=tmp_dir)
+
+
+def run_ddos_detect() -> List[dict]:
+    log_path = os.getenv("HIPS_DDOS_LOG_PATH", "data/dns.log")
+    request_limit = int(os.getenv("HIPS_DDOS_REQUEST_LIMIT", "1000"))
+    return run_ddos_check(log_path=log_path, request_limit=request_limit)
+
+
+def run_cron_monitor() -> List[dict]:
+    return run_cron_check()
+
+
+def run_access_monitor() -> List[dict]:
+    failed_limit = int(os.getenv("HIPS_ACCESS_FAILED_LIMIT", "5"))
+    distinct_user_limit = int(os.getenv("HIPS_ACCESS_DISTINCT_USER_LIMIT", "5"))
+    if not DEFAULT_SECURE_LOG_PATH.exists():
+        return []
+    try:
+        lines = read_new_log_lines(DEFAULT_SECURE_LOG_PATH, "access_monitor")
+    except OSError:
+        return []
+    return analyze_access_lines(
+        lines,
+        failed_limit=failed_limit,
+        distinct_user_limit=distinct_user_limit,
+    )
 
 
 def allowed_users_from_env() -> set[str]:
@@ -213,9 +270,16 @@ def main() -> None:
     prevention_dry_run = os.getenv("HIPS_PREVENTION_DRY_RUN", "true").lower() == "true"
 
     module_alarms = {
-        "log_analyzer": run_log_analyzer(),
+        "file_integrity": run_file_integrity(),
         "users_monitor": run_users_monitor(),
+        "sniffer_detect": run_sniffer_detect(),
+        "log_analyzer": run_log_analyzer(),
+        "mail_queue": run_mail_queue(),
         "process_monitor": run_process_monitor(),
+        "tmp_monitor": run_tmp_monitor(),
+        "ddos_detect": run_ddos_detect(),
+        "cron_monitor": run_cron_monitor(),
+        "access_monitor": run_access_monitor(),
     }
 
     for alarms in module_alarms.values():

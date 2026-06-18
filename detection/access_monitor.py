@@ -15,16 +15,28 @@ def analyze_access_lines(
     failed_limit: int = 5,
     distinct_user_limit: int = 5,
 ) -> List[dict]:
-    return analyze_sshd_lines(
+    alarms = analyze_sshd_lines(
         lines,
         failed_limit=failed_limit,
         distinct_user_limit=distinct_user_limit,
     )
+    normalized_alarms: List[dict] = []
+    for alarm in alarms:
+        normalized_alarm = dict(alarm)
+        normalized_alarm["modulo"] = "access_monitor"
+        if normalized_alarm.get("tipo_alarma") == "FAILED_LOGIN_MULTIPLE":
+            normalized_alarm["tipo_alarma"] = "ACCESO_INVALIDO_REPETIDO"
+        normalized_alarms.append(normalized_alarm)
+    return normalized_alarms
 
 
-def run_check() -> List[dict]:
+def run_check(failed_limit: int = 5, distinct_user_limit: int = 5) -> List[dict]:
     try:
         with open("/var/log/secure", "r", encoding="utf-8", errors="ignore") as file_obj:
-            return analyze_access_lines(file_obj)
-    except FileNotFoundError:
+            return analyze_access_lines(
+                file_obj,
+                failed_limit=failed_limit,
+                distinct_user_limit=distinct_user_limit,
+            )
+    except OSError:
         return []

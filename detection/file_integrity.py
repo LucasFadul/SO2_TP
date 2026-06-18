@@ -30,7 +30,13 @@ def check_integrity(
             continue
 
         expected_hash = baseline.get(file_path)
-        current_hash = calculate_sha256(file_path)
+        if not expected_hash:
+            continue
+
+        try:
+            current_hash = calculate_sha256(file_path)
+        except OSError:
+            continue
         if expected_hash and expected_hash != current_hash:
             alarms.append(
                 {
@@ -46,4 +52,3 @@ def check_integrity(
 
 def run_check() -> List[dict]:
     return check_integrity(baseline={})
-

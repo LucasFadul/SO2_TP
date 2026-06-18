@@ -15,7 +15,10 @@ def scan_cron_files(paths: Iterable[str]) -> List[dict]:
         path = Path(raw_path)
         if not path.exists():
             continue
-        content = path.read_text(errors="ignore")
+        try:
+            content = path.read_text(errors="ignore")
+        except OSError:
+            continue
         for token in SUSPICIOUS_TOKENS:
             if token in content:
                 alarms.append(
@@ -32,4 +35,3 @@ def scan_cron_files(paths: Iterable[str]) -> List[dict]:
 
 def run_check() -> List[dict]:
     return scan_cron_files(("/etc/crontab", "/var/spool/cron/root"))
-

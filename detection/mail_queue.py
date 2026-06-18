@@ -7,7 +7,10 @@ from typing import List
 
 
 def get_mailq_output() -> str:
-    result = subprocess.run(["mailq"], check=False, text=True, capture_output=True)
+    try:
+        result = subprocess.run(["mailq"], check=False, text=True, capture_output=True)
+    except FileNotFoundError:
+        return "Mail queue is empty"
     return result.stdout
 
 
@@ -30,4 +33,3 @@ def run_check(limit: int = 100) -> List[dict]:
             }
         ]
     return []
-

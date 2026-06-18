@@ -31,9 +31,8 @@ def analyze_dns_lines(lines: Iterable[str], request_limit: int = 1000) -> List[d
     ]
 
 
-def run_check(log_path: str = "data/dns.log") -> List[dict]:
+def run_check(log_path: str = "data/dns.log", request_limit: int = 1000) -> List[dict]:
     path = Path(log_path)
     if not path.exists():
         return []
-    return analyze_dns_lines(path.read_text(errors="ignore").splitlines())
-
+    return analyze_dns_lines(path.read_text(errors="ignore").splitlines(), request_limit=request_limit)
