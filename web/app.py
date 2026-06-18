@@ -86,7 +86,7 @@ def create_app() -> FastAPI:
             {
                 "modulo": modulo,
                 "label": module_label(modulo),
-                "items": items,
+                "settings": items,
             }
             for modulo, items in settings_by_module.items()
         ]

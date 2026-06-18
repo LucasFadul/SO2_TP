@@ -43,10 +43,10 @@
             <details class="config-section" id="{{ module.modulo }}" open>
               <summary>
                 <span class="module-name">{{ module.label }}</span>
-                <span class="module-count">{{ module.items|length }} parámetros</span>
+                <span class="module-count">{{ module.settings|length }} parámetros</span>
               </summary>
               <div class="config-grid">
-                {% for item in module.items %}
+                {% for item in module.settings %}
                 {% set setting = item.setting %}
                 <label class="config-field">
                   <span class="field-label">{{ setting.label }}</span>
