@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>hips_rocky - configuracion</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}?v=3">
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}?v=4">
   </head>
   <body>
     <main class="page">
@@ -34,52 +34,48 @@
         <p class="success">Configuración guardada.</p>
         {% endif %}
 
-        <form method="post" class="config-form">
-          <div class="config-layout">
-            <aside class="module-index">
-              {% for modulo, items in grouped_settings.items() %}
-              <a href="#{{ modulo }}">{{ modulo }}</a>
-              {% endfor %}
-            </aside>
+        <div class="module-shortcuts" aria-label="Accesos rápidos a módulos">
+          {% for modulo, items in grouped_settings.items() %}
+          <a href="#{{ modulo }}">{{ modulo }}</a>
+          {% endfor %}
+        </div>
 
-            <div class="config-sections">
-              {% for modulo, items in grouped_settings.items() %}
-              <section class="config-group" id="{{ modulo }}">
-                <div class="config-group-header">
-                  <div>
-                    <h3>{{ modulo }}</h3>
-                    <p>{{ items|length }} parámetros configurables</p>
-                  </div>
-                </div>
-                <div class="config-grid">
-                  {% for item in items %}
-                  {% set setting = item.setting %}
-                  <label class="config-field">
-                    <span class="field-label">{{ setting.label }}</span>
-                    {% if setting.input_type == "checkbox" %}
-                    <span class="checkbox-row">
-                      <input
-                        type="checkbox"
-                        name="{{ setting.modulo }}__{{ setting.parametro }}"
-                        value="true"
-                        {% if item.value in ["true", "1", "yes", "on"] %}checked{% endif %}
-                      >
-                      <span>Activo</span>
-                    </span>
-                    {% else %}
+        <form method="post" class="config-form">
+          <div class="config-sections">
+            {% for modulo, items in grouped_settings.items() %}
+            <details class="config-section" id="{{ modulo }}" open>
+              <summary>
+                <span class="module-name">{{ modulo }}</span>
+                <span class="module-count">{{ items|length }} parámetros</span>
+              </summary>
+              <div class="config-grid">
+                {% for item in items %}
+                {% set setting = item.setting %}
+                <label class="config-field">
+                  <span class="field-label">{{ setting.label }}</span>
+                  {% if setting.input_type == "checkbox" %}
+                  <span class="checkbox-row">
                     <input
-                      type="{{ setting.input_type }}"
+                      type="checkbox"
                       name="{{ setting.modulo }}__{{ setting.parametro }}"
-                      value="{{ item.value }}"
+                      value="true"
+                      {% if item.value in ["true", "1", "yes", "on"] %}checked{% endif %}
                     >
-                    {% endif %}
-                    <small>{{ setting.parametro }}</small>
-                  </label>
-                  {% endfor %}
-                </div>
-              </section>
+                    <span>Activo</span>
+                  </span>
+                  {% else %}
+                  <input
+                    type="{{ setting.input_type }}"
+                    name="{{ setting.modulo }}__{{ setting.parametro }}"
+                    value="{{ item.value }}"
+                  >
+                  {% endif %}
+                  <small>{{ setting.parametro }}</small>
+                </label>
               {% endfor %}
-            </div>
+              </div>
+            </details>
+            {% endfor %}
           </div>
 
           <div class="form-actions">

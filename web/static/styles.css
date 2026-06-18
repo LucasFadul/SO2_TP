@@ -305,85 +305,100 @@ tbody tr:last-child td {
 
 .config-form {
   display: grid;
-  gap: 22px;
+  gap: 20px;
 }
 
-.config-layout {
-  display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  gap: 24px;
-  align-items: start;
-}
-
-.module-index {
-  position: sticky;
-  top: 20px;
-  display: grid;
-  gap: 6px;
-  padding: 10px;
+.module-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 12px;
   border: 1px solid #e4e9f0;
   border-radius: 8px;
   background: #fbfcfe;
 }
 
-.module-index a {
-  min-height: 34px;
-  display: flex;
+.module-shortcuts a {
+  min-height: 32px;
+  display: inline-flex;
   align-items: center;
   padding: 0 10px;
-  border-radius: 6px;
+  border: 1px solid #d8e0ea;
+  border-radius: 999px;
+  background: #ffffff;
   color: #40546a;
   text-decoration: none;
-  font-size: 13px;
-  font-weight: 750;
+  font-size: 12px;
+  font-weight: 800;
 }
 
-.module-index a:hover {
-  background: #eef4f8;
+.module-shortcuts a:hover {
+  border-color: #9eb9cf;
   color: #1f5a8a;
 }
 
 .config-sections {
   display: grid;
-  gap: 24px;
+  gap: 12px;
 }
 
-.config-group {
+.config-section {
   scroll-margin-top: 24px;
-  padding-bottom: 22px;
-  border-bottom: 1px solid #e7ebf1;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  overflow: hidden;
 }
 
-.config-group:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-
-.config-group-header {
+.config-section summary {
+  min-height: 54px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  padding: 0 16px;
+  background: #f8fafc;
+  cursor: pointer;
+  list-style: none;
 }
 
-.config-group-header h3 {
-  margin: 0;
+.config-section summary::-webkit-details-marker {
+  display: none;
+}
+
+.config-section summary::after {
+  content: "Abrir";
+  color: #1f5a8a;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.config-section[open] summary::after {
+  content: "Cerrar";
+}
+
+.module-name {
+  color: #18202a;
   font-size: 16px;
-  line-height: 1.2;
+  font-weight: 850;
 }
 
-.config-group-header p {
-  margin: 4px 0 0;
-  color: #7a8492;
-  font-size: 13px;
-  font-weight: 650;
+.module-count {
+  margin-left: auto;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: #596678;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .config-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 14px 16px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1px;
+  background: #e7ebf1;
 }
 
 .config-field {
@@ -391,9 +406,7 @@ tbody tr:last-child td {
   align-content: start;
   gap: 8px;
   min-width: 0;
-  padding: 12px;
-  border: 1px solid #e3e8ef;
-  border-radius: 8px;
+  padding: 14px;
   background: #ffffff;
   font-size: 13px;
   color: #5b6573;
@@ -500,16 +513,12 @@ tbody tr:last-child td {
     justify-content: center;
   }
 
-  .config-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .module-index {
-    position: static;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  }
-
   .config-grid {
     grid-template-columns: 1fr;
+  }
+
+  .module-shortcuts {
+    max-height: 146px;
+    overflow: auto;
   }
 }
