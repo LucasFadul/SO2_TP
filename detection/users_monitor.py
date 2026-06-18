@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import ipaddress
 import subprocess
-from collections import Counter
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Set
 
@@ -79,7 +78,6 @@ def run_check(
     allowed_networks = tuple(allowed_networks or DEFAULT_ALLOWED_NETWORKS)
     user_shells = user_shells if user_shells is not None else read_user_shells()
     alarms: List[dict] = []
-    sessions_by_user: Counter[str] = Counter()
     session_names_by_user: Dict[str, List[str]] = {}
     first_ip_by_user: Dict[str, Optional[str]] = {}
 
@@ -89,8 +87,10 @@ def run_check(
             continue
         username = parts[0]
         ip_origen = parse_origin(parts)
-        sessions_by_user[username] += 1
-        session_names_by_user.setdefault(username, []).append(session_name(parts))
+        current_session = session_name(parts)
+        user_sessions = session_names_by_user.setdefault(username, [])
+        if current_session not in user_sessions:
+            user_sessions.append(current_session)
         first_ip_by_user.setdefault(username, ip_origen)
 
         if allowed_users and username not in allowed_users:
@@ -123,9 +123,10 @@ def run_check(
                 )
             )
 
-    for username, count in sessions_by_user.items():
+    for username, session_names_by_user_value in session_names_by_user.items():
+        count = len(session_names_by_user_value)
         if count > max_sessions:
-            session_names = ", ".join(session_names_by_user.get(username, []))
+            session_names = ", ".join(session_names_by_user_value)
             alarms.append(
                 build_alarm(
                     username,

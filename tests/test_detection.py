@@ -66,6 +66,22 @@ def test_users_monitor_counts_local_tty_for_session_limit(monkeypatch):
     assert "pts/2" in alarms[0]["detalle"]
 
 
+def test_users_monitor_counts_unique_session_names(monkeypatch):
+    monkeypatch.setattr(
+        "detection.users_monitor.list_logged_users",
+        lambda: (
+            "lucas tty1 2026-06-08 09:59\n"
+            "lucas pts/0 2026-06-08 10:00 (192.168.1.20)\n"
+            "lucas pts/0 2026-06-08 10:00 (192.168.1.20)\n"
+            "lucas pts/1 2026-06-08 10:01 (192.168.1.20)\n"
+        ),
+    )
+
+    alarms = run_users_check(allowed_users={"lucas"}, max_sessions=3)
+
+    assert alarms == []
+
+
 def test_users_monitor_detects_external_ip(monkeypatch):
     monkeypatch.setattr(
         "detection.users_monitor.list_logged_users",
