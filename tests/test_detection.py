@@ -82,6 +82,30 @@ def test_users_monitor_counts_unique_session_names(monkeypatch):
     assert alarms == []
 
 
+def test_users_monitor_ignores_inactive_sessions(monkeypatch):
+    monkeypatch.setattr(
+        "detection.users_monitor.list_logged_users",
+        lambda: (
+            "lucas tty1 2026-06-08 09:59\n"
+            "lucas pts/0 2026-06-08 10:00 (192.168.1.20)\n"
+            "lucas pts/1 2026-06-08 10:01 (192.168.1.20)\n"
+            "lucas pts/2 2026-06-08 10:02 (192.168.1.20)\n"
+        ),
+    )
+    monkeypatch.setattr(
+        "detection.users_monitor.session_is_active",
+        lambda session: session != "pts/2",
+    )
+
+    alarms = run_users_check(
+        allowed_users={"lucas"},
+        max_sessions=3,
+        validate_sessions=True,
+    )
+
+    assert alarms == []
+
+
 def test_users_monitor_detects_external_ip(monkeypatch):
     monkeypatch.setattr(
         "detection.users_monitor.list_logged_users",

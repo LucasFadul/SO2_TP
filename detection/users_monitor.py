@@ -68,11 +68,24 @@ def session_name(parts: List[str]) -> str:
     return "desconocida"
 
 
+def session_is_active(session: str) -> bool:
+    if session == "desconocida":
+        return True
+    result = subprocess.run(
+        ["ps", "-t", session, "-o", "pid="],
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    return bool(result.stdout.strip())
+
+
 def run_check(
     allowed_users: Optional[Set[str]] = None,
     allowed_networks: Optional[Iterable[str]] = None,
     max_sessions: int = 2,
     user_shells: Optional[Dict[str, str]] = None,
+    validate_sessions: bool = False,
 ) -> List[dict]:
     allowed_users = allowed_users or set()
     allowed_networks = tuple(allowed_networks or DEFAULT_ALLOWED_NETWORKS)
@@ -88,6 +101,8 @@ def run_check(
         username = parts[0]
         ip_origen = parse_origin(parts)
         current_session = session_name(parts)
+        if validate_sessions and not session_is_active(current_session):
+            continue
         user_sessions = session_names_by_user.setdefault(username, [])
         if current_session not in user_sessions:
             user_sessions.append(current_session)

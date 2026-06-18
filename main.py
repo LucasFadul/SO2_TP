@@ -246,6 +246,7 @@ def run_users_monitor() -> List[dict]:
         allowed_users=allowed_users,
         allowed_networks=allowed_networks,
         max_sessions=max_sessions,
+        validate_sessions=True,
     )
     return alarms
 
