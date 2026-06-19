@@ -9,6 +9,7 @@ from typing import List, Mapping
 
 from dotenv import load_dotenv
 
+from alerts.mailer import send_alert
 from config.module_settings import SETTINGS_BY_KEY
 from db.models import (
     get_module_config,
@@ -100,14 +101,29 @@ def register_alarm_with_prevention(
     alarm_id = insert_alarm(alarm)
 
     result = run_prevention(alarm, dry_run=prevention_dry_run)
-    if not result:
-        return
+    if result:
+        insert_prevention_action(
+            alarma_id=alarm_id,
+            accion=result["accion"],
+            resultado=str(result),
+        )
 
-    insert_prevention_action(
-        alarma_id=alarm_id,
-        accion=result["accion"],
-        resultado=str(result),
-    )
+    notify_admin(alarm, result)
+
+
+def notify_admin(
+    alarm: Mapping[str, object],
+    prevention_result: Mapping[str, object] | None,
+) -> None:
+    email_dry_run = os.getenv("HIPS_EMAIL_DRY_RUN", "true").lower() == "true"
+    try:
+        send_alert(
+            alarm,
+            prevention_result=prevention_result,
+            dry_run=email_dry_run,
+        )
+    except Exception as exc:
+        print(f"Advertencia: no se pudo enviar email: {exc}")
 
 
 def run_prevention(alarm: Mapping[str, object], dry_run: bool) -> dict | None:
