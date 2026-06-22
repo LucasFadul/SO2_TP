@@ -51,3 +51,42 @@ def write_alarm(alarm: Mapping[str, object], log_dir: Optional[str] = None) -> P
         file_obj.write(json.dumps(normalize_alarm(alarm), ensure_ascii=True) + "\n")
 
     return log_path
+
+
+def format_prevention_line(
+    alarm: Mapping[str, object],
+    prevention_result: Mapping[str, object],
+) -> str:
+    alarm_type = alarm.get("tipo_alarma", "ALARMA_DESCONOCIDA")
+    module = alarm.get("modulo", "unknown")
+    action = prevention_result.get("accion", "accion_desconocida")
+    dry_run = prevention_result.get("dry_run")
+    ok = prevention_result.get("ok")
+    return (
+        f"{utc_now_iso()} :: {alarm_type} :: {module} :: "
+        f"{action} :: dry_run={dry_run} :: ok={ok} :: {prevention_result}"
+    )
+
+
+def write_prevention(
+    alarm: Mapping[str, object],
+    prevention_result: Mapping[str, object],
+    log_dir: Optional[str] = None,
+) -> Path:
+    target_dir = Path(log_dir or os.getenv("HIPS_LOG_DIR", DEFAULT_LOG_DIR))
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    log_path = target_dir / "prevencion.log"
+    with log_path.open("a", encoding="utf-8") as file_obj:
+        file_obj.write(format_prevention_line(alarm, prevention_result) + "\n")
+
+    json_path = target_dir / "prevencion.jsonl"
+    with json_path.open("a", encoding="utf-8") as file_obj:
+        payload = {
+            "timestamp": utc_now_iso(),
+            "alarma": normalize_alarm(alarm),
+            "prevencion": dict(prevention_result),
+        }
+        file_obj.write(json.dumps(payload, ensure_ascii=True) + "\n")
+
+    return log_path

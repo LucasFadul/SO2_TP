@@ -9,6 +9,7 @@ from typing import List, Mapping
 
 from dotenv import load_dotenv
 
+from alerts.logger import write_alarm, write_prevention
 from alerts.mailer import send_alert
 from config.module_settings import SETTINGS_BY_KEY
 from db.models import (
@@ -99,6 +100,7 @@ def register_alarm_with_prevention(
     prevention_dry_run: bool,
 ) -> None:
     alarm_id = insert_alarm(alarm)
+    log_alarm(alarm)
 
     result = run_prevention(alarm, dry_run=prevention_dry_run)
     if result:
@@ -107,8 +109,26 @@ def register_alarm_with_prevention(
             accion=result["accion"],
             resultado=str(result),
         )
+        log_prevention(alarm, result)
 
     notify_admin(alarm, result)
+
+
+def log_alarm(alarm: Mapping[str, object]) -> None:
+    try:
+        write_alarm(alarm)
+    except Exception as exc:
+        print(f"Advertencia: no se pudo escribir alarmas.log: {exc}")
+
+
+def log_prevention(
+    alarm: Mapping[str, object],
+    prevention_result: Mapping[str, object],
+) -> None:
+    try:
+        write_prevention(alarm, prevention_result)
+    except Exception as exc:
+        print(f"Advertencia: no se pudo escribir prevencion.log: {exc}")
 
 
 def notify_admin(
