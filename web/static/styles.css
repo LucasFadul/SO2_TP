@@ -125,6 +125,10 @@ body {
   gap: 10px;
 }
 
+.inline-action-form {
+  margin: 0;
+}
+
 .toggle-all-button {
   min-height: 34px;
   padding: 0 12px;
@@ -138,7 +142,21 @@ body {
   font-weight: 800;
 }
 
-.toggle-all-button:hover {
+.reset-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #334257;
+  border-radius: 6px;
+  background: #121923;
+  color: #c9d5e4;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.toggle-all-button:hover,
+.reset-button:hover {
   border-color: #3f8fd0;
   background: #172232;
 }

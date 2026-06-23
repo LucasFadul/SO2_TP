@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>HIPS Rocky - Configuracion</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}?v=7">
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}?v=8">
   </head>
   <body>
     <main class="page">
@@ -27,6 +27,9 @@
           </div>
           <div class="section-actions">
             <span class="status-chip">10 módulos</span>
+            <form method="post" action="/config/reset" class="inline-action-form">
+              <button class="reset-button" type="submit">Restaurar</button>
+            </form>
             <button class="toggle-all-button" type="button" id="toggle-config-sections">Cerrar</button>
           </div>
         </div>
@@ -35,6 +38,9 @@
         {% endif %}
         {% if saved %}
         <p class="success">Configuración guardada.</p>
+        {% endif %}
+        {% if reset %}
+        <p class="success">Valores originales restaurados.</p>
         {% endif %}
 
         <form method="post" class="config-form">

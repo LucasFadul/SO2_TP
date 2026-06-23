@@ -98,6 +98,7 @@ def create_app() -> FastAPI:
             {
                 "db_error": db_error,
                 "saved": saved == "1",
+                "reset": saved == "reset",
                 "grouped_settings": grouped_settings,
             },
         )
@@ -117,6 +118,13 @@ def create_app() -> FastAPI:
             set_module_config(setting.modulo, setting.parametro, value)
 
         return RedirectResponse("/config?saved=1", status_code=303)
+
+    @app.post("/config/reset")
+    def reset_config():
+        for setting in SETTINGS:
+            set_module_config(setting.modulo, setting.parametro, setting.default)
+
+        return RedirectResponse("/config?saved=reset", status_code=303)
 
     @app.get("/health")
     def health():
