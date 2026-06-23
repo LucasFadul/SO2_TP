@@ -28,57 +28,36 @@ Los modulos revisan usuarios conectados, logs del sistema y procesos. Si encuent
 
 ## 3. Modulos implementados
 
-### log_analyzer
+El sistema cubre los 10 modulos pedidos por el TP:
 
-Analiza logs del sistema, principalmente `/var/log/secure`, para detectar patrones de acceso fallido.
+| Modulo | Que detecta | Accion preventiva |
+| --- | --- | --- |
+| Integridad de Archivos | Cambios en archivos criticos | `protect_file` |
+| Usuarios Conectados | Usuarios no esperados, origenes raros o muchas sesiones | `lock_user` |
+| Sniffers de Red | `tcpdump`, Wireshark o modo promiscuo | `kill_process` / `disable_promisc` |
+| Analisis de Logs | SSH fallido, scanners HTTP y anomalias de mail | `block_ip` |
+| Cola de Correo | Cola de mail demasiado grande | `stop_service` |
+| Procesos de Alto Consumo | CPU/RAM por encima del umbral | `kill_process` |
+| Directorio Temporal | Scripts o ejecutables sospechosos en `/tmp` | `quarantine_file` |
+| Deteccion DDoS | Muchas solicitudes DNS desde una IP | `block_ip` |
+| Tareas Cron | Cron con comandos sospechosos | `quarantine_file` |
+| Accesos Invalidos | Intentos repetidos o credential stuffing | `block_ip` |
 
-Ejemplo de alarma:
+Frase para explicar:
 
-```text
-FAILED_LOGIN_MULTIPLE
-```
+> Cada modulo mira una parte distinta del host. Cuando detecta una condicion anomala, genera una alarma, la guarda en PostgreSQL, registra la accion preventiva y envia una notificacion por email.
 
-Accion preventiva registrada:
-
-```text
-block_ip
-```
-
-### users_monitor
-
-Consulta usuarios conectados con el comando `who`.
-
-Detecta usuarios inesperados, conexiones desde redes no permitidas o demasiadas sesiones simultaneas.
-
-Ejemplo de alarma:
+Para la demo en vivo conviene mostrar los casos mas faciles de reproducir:
 
 ```text
-USUARIO_SOSPECHOSO
+log_analyzer / access_monitor -> SSH fallido
+users_monitor                 -> sesiones SSH simultaneas
+sniffer_detect                -> tcpdump activo
+process_monitor               -> proceso yes con CPU alta
+tmp_monitor                   -> script en /tmp
 ```
 
-Accion preventiva registrada:
-
-```text
-lock_user
-```
-
-### process_monitor
-
-Consulta procesos del sistema con `ps`.
-
-Si un proceso supera el umbral de CPU o memoria y no esta en whitelist, genera una alarma.
-
-Ejemplo de alarma:
-
-```text
-PROCESO_ALTO_CONSUMO
-```
-
-Accion preventiva registrada:
-
-```text
-kill_process
-```
+La explicacion completa de cada modulo esta en `docs/modulos.md`.
 
 ## 4. Base de datos
 
@@ -250,32 +229,32 @@ PostgreSQL:
 
 ## 11. Configuracion
 
-La configuracion principal esta en `.env`.
+La configuracion operativa de los modulos esta en PostgreSQL y se modifica
+desde `/config`.
+
+La configuracion de infraestructura queda en `.env`, por ejemplo datos de base
+de datos, modo `dry_run` y SMTP.
 
 Ejemplos:
 
 ```env
-HIPS_CPU_LIMIT_PERCENT=90
-HIPS_MEMORY_LIMIT_PERCENT=90
-HIPS_USERS_MAX_SESSIONS=3
-HIPS_FAILED_LOGIN_LIMIT=5
 HIPS_PREVENTION_DRY_RUN=true
+HIPS_EMAIL_DRY_RUN=false
+HIPS_SMTP_HOST=smtp.gmail.com
 ```
 
 Frase para explicar:
 
-> Las contrasenas reales no se suben al repositorio. El repositorio incluye `.env.example` como plantilla.
+> Los parametros de deteccion se pueden cambiar desde el dashboard. Las credenciales reales quedan fuera del repositorio y se cargan desde `.env`.
 
 ## 12. Limitaciones
 
 Puntos honestos para mencionar:
 
-- Esta version implementa funcionalmente tres modulos principales.
-- Otros modulos quedan preparados en la estructura del proyecto, pero no todos estan integrados.
-- Las acciones preventivas estan en `dry_run`.
-- La configuracion actualmente esta en `.env`; la especificacion pide configuracion desde web como mejora pendiente.
-- Falta integrar envio real de emails al administrador.
-- Falta registrar logs formales en `/var/log/hips/alarmas.log` y `/var/log/hips/prevencion.log`.
+- Las acciones preventivas pueden ejecutarse en `dry_run` para evitar bloquear la VM durante la demo.
+- Algunos modulos requieren escenario preparado para demostrarse, por ejemplo cola de correo, log DNS o baseline de integridad.
+- El dashboard no ejecuta deteccion por si solo: muestra alarmas ya registradas por `main.py`.
+- Los logs formales se guardan a partir de la integracion del logger central; alarmas antiguas pueden existir solo en PostgreSQL.
 
 ## 13. Cierre
 
@@ -293,4 +272,3 @@ Frase final:
 6. Refrescar el dashboard.
 7. Mostrar hardening.
 8. Explicar limitaciones y mejoras futuras.
-

