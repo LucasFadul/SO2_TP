@@ -1,4 +1,27 @@
-from alerts.logger import write_alarm, write_prevention
+from alerts.logger import format_alarm_line, write_alarm, write_prevention
+
+
+def test_alarm_line_uses_required_format():
+    alarm = {
+        "timestamp": "2026-05-29T18:25:09+00:00",
+        "tipo_alarma": "FAILED_LOGIN_MULTIPLE",
+        "ip_origen": "10.0.0.25",
+        "modulo": "log_analyzer",
+        "severidad": "alta",
+        "detalle": "6 fallos de autenticacion",
+    }
+
+    assert format_alarm_line(alarm) == "29/05/2026 :: FAILED_LOGIN_MULTIPLE :: 10.0.0.25"
+
+
+def test_alarm_line_uses_na_without_source_ip():
+    alarm = {
+        "timestamp": "2026-05-29T18:25:09+00:00",
+        "tipo_alarma": "SNIFFER_DETECTADO",
+        "ip_origen": None,
+    }
+
+    assert format_alarm_line(alarm) == "29/05/2026 :: SNIFFER_DETECTADO :: N/A"
 
 
 def test_write_alarm_creates_text_and_json_logs(tmp_path):
@@ -13,7 +36,10 @@ def test_write_alarm_creates_text_and_json_logs(tmp_path):
     log_path = write_alarm(alarm, log_dir=str(tmp_path))
 
     assert log_path.name == "alarmas.log"
-    assert "FAILED_LOGIN_MULTIPLE :: 192.168.64.1" in log_path.read_text()
+    text = log_path.read_text()
+    assert "FAILED_LOGIN_MULTIPLE :: 192.168.64.1" in text
+    assert "log_analyzer" not in text
+    assert "6 fallos de autenticacion" not in text
     assert (tmp_path / "alarmas.jsonl").exists()
 
 
@@ -34,8 +60,21 @@ def test_write_prevention_creates_text_and_json_logs(tmp_path):
 
     log_path = write_prevention(alarm, prevention_result, log_dir=str(tmp_path))
 
-    assert log_path.name == "prevencion.log"
+    assert log_path.name == "prevención.log"
     text = log_path.read_text()
     assert "PROCESO_ALTO_CONSUMO :: process_monitor :: kill_process" in text
     assert "dry_run=True" in text
     assert (tmp_path / "prevencion.jsonl").exists()
+
+
+def test_write_prevention_migrates_legacy_log_name(tmp_path):
+    legacy_log = tmp_path / "prevencion.log"
+    legacy_log.write_text("registro anterior\n")
+    alarm = {"tipo_alarma": "SNIFFER_DETECTADO", "modulo": "sniffer_detect"}
+    result = {"accion": "kill_process", "dry_run": True, "ok": True}
+
+    log_path = write_prevention(alarm, result, log_dir=str(tmp_path))
+
+    assert log_path.name == "prevención.log"
+    assert "registro anterior" in log_path.read_text()
+    assert not legacy_log.exists()

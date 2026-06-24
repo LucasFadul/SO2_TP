@@ -10,10 +10,25 @@ from typing import Mapping, Optional
 
 
 DEFAULT_LOG_DIR = "/var/log/hips"
+PREVENTION_LOG_NAME = "prevención.log"
+LEGACY_PREVENTION_LOG_NAME = "prevencion.log"
 
 
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def format_log_date(timestamp: object = None) -> str:
+    if isinstance(timestamp, datetime):
+        value = timestamp
+    elif timestamp:
+        try:
+            value = datetime.fromisoformat(str(timestamp).replace("Z", "+00:00"))
+        except ValueError:
+            value = datetime.now().astimezone()
+    else:
+        value = datetime.now().astimezone()
+    return value.astimezone().strftime("%d/%m/%Y")
 
 
 def normalize_alarm(alarm: Mapping[str, object]) -> dict:
@@ -31,11 +46,8 @@ def normalize_alarm(alarm: Mapping[str, object]) -> dict:
 def format_alarm_line(alarm: Mapping[str, object]) -> str:
     normalized = normalize_alarm(alarm)
     ip_origen = normalized["ip_origen"] or "N/A"
-    return (
-        f"{normalized['timestamp']} :: {normalized['tipo_alarma']} :: "
-        f"{ip_origen} :: {normalized['modulo']} :: {normalized['severidad']} :: "
-        f"{normalized['detalle']}"
-    )
+    date = format_log_date(normalized["timestamp"])
+    return f"{date} :: {normalized['tipo_alarma']} :: {ip_origen}"
 
 
 def write_alarm(alarm: Mapping[str, object], log_dir: Optional[str] = None) -> Path:
@@ -76,7 +88,11 @@ def write_prevention(
     target_dir = Path(log_dir or os.getenv("HIPS_LOG_DIR", DEFAULT_LOG_DIR))
     target_dir.mkdir(parents=True, exist_ok=True)
 
-    log_path = target_dir / "prevencion.log"
+    log_path = target_dir / PREVENTION_LOG_NAME
+    legacy_log_path = target_dir / LEGACY_PREVENTION_LOG_NAME
+    if legacy_log_path.exists() and not log_path.exists():
+        legacy_log_path.rename(log_path)
+
     with log_path.open("a", encoding="utf-8") as file_obj:
         file_obj.write(format_prevention_line(alarm, prevention_result) + "\n")
 

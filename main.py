@@ -128,7 +128,7 @@ def log_prevention(
     try:
         write_prevention(alarm, prevention_result)
     except Exception as exc:
-        print(f"Advertencia: no se pudo escribir prevencion.log: {exc}")
+        print(f"Advertencia: no se pudo escribir prevención.log: {exc}")
 
 
 def notify_admin(

@@ -53,3 +53,11 @@ python3 main.py
 ## Seguridad
 
 No subir `.env` ni archivos `*.enc` reales. El repositorio incluye solo ejemplos sin secretos.
+
+## Manual de instalacion y uso
+
+El manual completo preparado para entrega impresa y digital se encuentra en:
+
+```text
+docs/manual_instalacion_y_uso.md
+```

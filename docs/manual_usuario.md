@@ -1,5 +1,13 @@
 # Manual de usuario
 
+El manual completo, preparado para entrega impresa y digital, se encuentra en:
+
+```text
+docs/manual_instalacion_y_uso.md
+```
+
+Las secciones siguientes se conservan como referencia rapida.
+
 ## Dashboard
 
 El dashboard muestra alarmas con:
@@ -74,10 +82,10 @@ Los archivos principales son:
 
 ```text
 /var/log/hips/alarmas.log
-/var/log/hips/prevencion.log
+/var/log/hips/prevención.log
 ```
 
-`alarmas.log` registra las alarmas detectadas por los modulos. `prevencion.log` registra las acciones preventivas tomadas o simuladas.
+`alarmas.log` registra las alarmas detectadas por los modulos. `prevención.log` registra las acciones preventivas tomadas o simuladas.
 
 Para ver las ultimas alarmas:
 
@@ -88,7 +96,7 @@ sudo tail -n 5 /var/log/hips/alarmas.log
 Para ver las ultimas acciones preventivas:
 
 ```bash
-sudo tail -n 5 /var/log/hips/prevencion.log
+sudo tail -n 5 /var/log/hips/prevención.log
 ```
 
 Para leer todo el archivo:
