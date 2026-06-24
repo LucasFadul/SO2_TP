@@ -723,22 +723,6 @@ Monitoreo en tiempo real:
 sudo tail -f /var/log/hips/alarmas.log
 ```
 
-Si existen registros creados con el formato anterior, se pueden actualizar sin
-eliminar el historial:
-
-```bash
-cd ~/SO2_TP
-sudo .venv/bin/python3 scripts/migrate_hips_logs.py
-```
-
-La migracion:
-
-- convierte `alarmas.log` a `dd/mm/yyyy :: TIPO :: IP`;
-- mantiene `prevencion.log` sin tilde;
-- conserva todas las acciones preventivas;
-- crea `alarmas.log.bak` y `prevencion.log.bak`;
-- no modifica los archivos `.jsonl`.
-
 Los logs contienen solamente eventos generados desde que se integro y ejecuto
 el logger. PostgreSQL puede contener alarmas anteriores; por eso la cantidad
 historica puede no coincidir.
@@ -1081,6 +1065,6 @@ Antes de la entrega:
 docs/modulos.md
 docs/pruebas.md
 docs/hardening.md
-docs/mapa_prevencion.md
 docs/guia_presentacion.md
+docs/escenario_entrega.md
 ```

@@ -61,3 +61,9 @@ El manual completo preparado para entrega impresa y digital se encuentra en:
 ```text
 docs/manual_instalacion_y_uso.md
 ```
+
+El escenario reproducible para la demostracion se encuentra en:
+
+```text
+docs/escenario_entrega.md
+```

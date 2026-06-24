@@ -264,11 +264,19 @@ Frase final:
 
 ## Orden recomendado para la demo
 
-1. Mostrar estructura del repositorio.
-2. Mostrar `.env.example`.
-3. Mostrar tablas de PostgreSQL con `\dt`.
+La secuencia operativa completa y los comandos de contingencia estan en:
+
+```text
+docs/escenario_entrega.md
+```
+
+Orden resumido:
+
+1. Ejecutar el preflight.
+2. Mostrar `10 passed` de los modulos.
+3. Mostrar tablas de PostgreSQL.
 4. Levantar o mostrar el dashboard.
-5. Ejecutar una prueba real.
-6. Refrescar el dashboard.
+5. Ejecutar las pruebas reales preparadas.
+6. Mostrar logs, email y acciones preventivas.
 7. Mostrar hardening.
 8. Explicar limitaciones y mejoras futuras.

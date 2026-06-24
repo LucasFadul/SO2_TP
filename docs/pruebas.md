@@ -47,6 +47,20 @@ Resultado esperado:
 
 ## Pruebas automaticas
 
+Para validar una alarma principal por cada uno de los 10 modulos:
+
+```bash
+python3 -m pytest tests/test_all_modules.py -q
+```
+
+Resultado esperado:
+
+```text
+10 passed
+```
+
+Para ejecutar todas las pruebas del proyecto:
+
 ```bash
 python3 -m pytest -q
 ```
@@ -57,8 +71,10 @@ Resultado esperado:
 tests passed
 ```
 
-Estas pruebas validan logica interna de deteccion, alertas y logging sin
-depender de eventos reales del sistema.
+Las pruebas de los modulos utilizan datos simulados y directorios temporales.
+No modifican archivos reales de `/etc`, no bloquean usuarios o direcciones IP
+y no terminan procesos del sistema. La suite completa tambien valida alertas
+por email y el logger.
 
 ## Pruebas por modulo
 
