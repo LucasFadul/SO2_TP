@@ -317,7 +317,7 @@ sudo tail -n 5 /var/log/hips/alarmas.log
 Ver ultimas acciones preventivas:
 
 ```bash
-sudo tail -n 5 /var/log/hips/prevención.log
+sudo tail -n 5 /var/log/hips/prevencion.log
 ```
 
 ## Resultado esperado de la demo

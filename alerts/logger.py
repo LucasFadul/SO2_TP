@@ -10,8 +10,7 @@ from typing import Mapping, Optional
 
 
 DEFAULT_LOG_DIR = "/var/log/hips"
-PREVENTION_LOG_NAME = "prevención.log"
-LEGACY_PREVENTION_LOG_NAME = "prevencion.log"
+PREVENTION_LOG_NAME = "prevencion.log"
 
 
 def utc_now_iso() -> str:
@@ -75,7 +74,7 @@ def format_prevention_line(
     dry_run = prevention_result.get("dry_run")
     ok = prevention_result.get("ok")
     return (
-        f"{utc_now_iso()} :: {alarm_type} :: {module} :: "
+        f"{format_log_date()} :: {alarm_type} :: {module} :: "
         f"{action} :: dry_run={dry_run} :: ok={ok} :: {prevention_result}"
     )
 
@@ -89,10 +88,6 @@ def write_prevention(
     target_dir.mkdir(parents=True, exist_ok=True)
 
     log_path = target_dir / PREVENTION_LOG_NAME
-    legacy_log_path = target_dir / LEGACY_PREVENTION_LOG_NAME
-    if legacy_log_path.exists() and not log_path.exists():
-        legacy_log_path.rename(log_path)
-
     with log_path.open("a", encoding="utf-8") as file_obj:
         file_obj.write(format_prevention_line(alarm, prevention_result) + "\n")
 

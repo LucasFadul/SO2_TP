@@ -82,7 +82,7 @@ Alarma detectada
     +--> Modulo de prevencion
              |
              +--> PostgreSQL
-             +--> /var/log/hips/prevención.log
+             +--> /var/log/hips/prevencion.log
     |
     v
 Dashboard FastAPI
@@ -697,7 +697,7 @@ El HIPS crea:
 
 ```text
 /var/log/hips/alarmas.log
-/var/log/hips/prevención.log
+/var/log/hips/prevencion.log
 /var/log/hips/alarmas.jsonl
 /var/log/hips/prevencion.jsonl
 ```
@@ -714,7 +714,7 @@ sudo tail -n 10 /var/log/hips/alarmas.log
 Ultimas acciones:
 
 ```bash
-sudo tail -n 10 /var/log/hips/prevención.log
+sudo tail -n 10 /var/log/hips/prevencion.log
 ```
 
 Monitoreo en tiempo real:
@@ -722,6 +722,22 @@ Monitoreo en tiempo real:
 ```bash
 sudo tail -f /var/log/hips/alarmas.log
 ```
+
+Si existen registros creados con el formato anterior, se pueden actualizar sin
+eliminar el historial:
+
+```bash
+cd ~/SO2_TP
+sudo .venv/bin/python3 scripts/migrate_hips_logs.py
+```
+
+La migracion:
+
+- convierte `alarmas.log` a `dd/mm/yyyy :: TIPO :: IP`;
+- mantiene `prevencion.log` sin tilde;
+- conserva todas las acciones preventivas;
+- crea `alarmas.log.bak` y `prevencion.log.bak`;
+- no modifica los archivos `.jsonl`.
 
 Los logs contienen solamente eventos generados desde que se integro y ejecuto
 el logger. PostgreSQL puede contener alarmas anteriores; por eso la cantidad

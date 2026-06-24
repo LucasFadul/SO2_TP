@@ -82,10 +82,10 @@ Los archivos principales son:
 
 ```text
 /var/log/hips/alarmas.log
-/var/log/hips/prevención.log
+/var/log/hips/prevencion.log
 ```
 
-`alarmas.log` registra las alarmas detectadas por los modulos. `prevención.log` registra las acciones preventivas tomadas o simuladas.
+`alarmas.log` registra las alarmas detectadas por los modulos. `prevencion.log` registra las acciones preventivas tomadas o simuladas.
 
 Para ver las ultimas alarmas:
 
@@ -96,7 +96,7 @@ sudo tail -n 5 /var/log/hips/alarmas.log
 Para ver las ultimas acciones preventivas:
 
 ```bash
-sudo tail -n 5 /var/log/hips/prevención.log
+sudo tail -n 5 /var/log/hips/prevencion.log
 ```
 
 Para leer todo el archivo:
@@ -118,3 +118,12 @@ Para monitorear alarmas en tiempo real:
 ```bash
 sudo tail -f /var/log/hips/alarmas.log
 ```
+
+Para migrar registros historicos al formato obligatorio sin eliminarlos:
+
+```bash
+cd ~/SO2_TP
+sudo .venv/bin/python3 scripts/migrate_hips_logs.py
+```
+
+El script crea copias `.bak` y no modifica los archivos `.jsonl`.

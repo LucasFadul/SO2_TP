@@ -60,21 +60,8 @@ def test_write_prevention_creates_text_and_json_logs(tmp_path):
 
     log_path = write_prevention(alarm, prevention_result, log_dir=str(tmp_path))
 
-    assert log_path.name == "prevención.log"
+    assert log_path.name == "prevencion.log"
     text = log_path.read_text()
     assert "PROCESO_ALTO_CONSUMO :: process_monitor :: kill_process" in text
     assert "dry_run=True" in text
     assert (tmp_path / "prevencion.jsonl").exists()
-
-
-def test_write_prevention_migrates_legacy_log_name(tmp_path):
-    legacy_log = tmp_path / "prevencion.log"
-    legacy_log.write_text("registro anterior\n")
-    alarm = {"tipo_alarma": "SNIFFER_DETECTADO", "modulo": "sniffer_detect"}
-    result = {"accion": "kill_process", "dry_run": True, "ok": True}
-
-    log_path = write_prevention(alarm, result, log_dir=str(tmp_path))
-
-    assert log_path.name == "prevención.log"
-    assert "registro anterior" in log_path.read_text()
-    assert not legacy_log.exists()
