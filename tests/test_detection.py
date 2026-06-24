@@ -1,5 +1,6 @@
 from detection.log_analyzer import analyze_lines
 from detection.process_monitor import run_check as run_process_check
+from detection.sniffer_detect import detect_sniffer_processes
 from detection.users_monitor import run_check as run_users_check
 
 
@@ -172,3 +173,17 @@ def test_process_monitor_ignores_whitelisted_process(monkeypatch):
     )
 
     assert alarms == []
+
+
+def test_sniffer_detect_ignores_sudo_wrapper_processes():
+    ps_output = (
+        "USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND\n"
+        "root 3322 0.0 0.2 19508 6784 pts/0 S 20:07 0:00 sudo tcpdump -i enp0s1\n"
+        "root 3326 0.0 0.1 19508 2876 pts/1 Ss+ 20:07 0:00 sudo tcpdump -i enp0s1\n"
+        "tcpdump 3327 0.0 0.3 15712 8296 pts/1 S 20:07 0:00 tcpdump -i enp0s1\n"
+    )
+
+    matches = detect_sniffer_processes(ps_output)
+
+    assert len(matches) == 1
+    assert matches[0].startswith("tcpdump 3327 ")

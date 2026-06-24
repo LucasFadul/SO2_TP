@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import subprocess
+from pathlib import Path
 from typing import Iterable, List, Optional
 
 
@@ -31,12 +32,19 @@ def detect_promiscuous_interfaces(ip_link_output: str) -> List[str]:
 
 
 def detect_sniffer_processes(ps_output: str, names: Iterable[str] = SNIFFER_PROCESS_NAMES) -> List[str]:
+    normalized_names = {name.lower() for name in names}
     matches: List[str] = []
+
     for line in ps_output.splitlines():
-        lowered = line.lower()
-        if any(name in lowered for name in names):
-            if "sniffer_detect.py" not in lowered:
-                matches.append(line)
+        parts = line.split(None, 10)
+        if len(parts) < 11 or parts[0].upper() == "USER":
+            continue
+
+        executable = parts[10].split(None, 1)[0]
+        process_name = Path(executable).name.lower()
+        if process_name in normalized_names:
+            matches.append(line)
+
     return matches
 
 
