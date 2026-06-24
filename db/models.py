@@ -156,3 +156,48 @@ def set_module_config(modulo: str, parametro: str, valor: object) -> None:
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(query, (modulo, parametro, str(valor)))
+
+
+def get_web_user(username: str) -> Optional[dict]:
+    query = """
+        SELECT id, username, password_hash, rol, activo, ultimo_login
+        FROM usuarios_web
+        WHERE username = %s
+    """
+    with psycopg.connect(database_url(), row_factory=dict_row) as conn:
+        with conn.cursor() as cur:
+            cur.execute(query, (username,))
+            row = cur.fetchone()
+            return dict(row) if row else None
+
+
+def upsert_web_user(
+    username: str,
+    password_hash: str,
+    rol: str = "administrador",
+) -> int:
+    query = """
+        INSERT INTO usuarios_web (username, password_hash, rol, activo)
+        VALUES (%s, %s, %s, true)
+        ON CONFLICT (username)
+        DO UPDATE SET
+            password_hash = EXCLUDED.password_hash,
+            rol = EXCLUDED.rol,
+            activo = true
+        RETURNING id
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query, (username, password_hash, rol))
+            return int(cur.fetchone()[0])
+
+
+def update_web_user_last_login(user_id: int) -> None:
+    query = """
+        UPDATE usuarios_web
+        SET ultimo_login = now()
+        WHERE id = %s
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query, (user_id,))

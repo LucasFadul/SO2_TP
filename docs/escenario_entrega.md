@@ -42,6 +42,17 @@ la presentacion. El correo puede mantenerse real para demostrar la alerta.
 
 No mostrar las contraseñas de `.env`.
 
+Comprobar que existe un usuario activo para el dashboard:
+
+```bash
+sudo -u postgres psql -d hips -c \
+  "SELECT username, rol, activo FROM usuarios_web;"
+```
+
+Antes de comenzar la demostracion, iniciar sesion en el dashboard. Mantener
+preparadas las credenciales sin escribirlas en la documentacion ni mostrarlas
+en una captura.
+
 ### 1.3 Restaurar configuracion y preparar fixtures
 
 Desde `/config`, usar `Restaurar` y luego configurar:

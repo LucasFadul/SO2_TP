@@ -79,6 +79,140 @@ body {
   background: #1b2633;
 }
 
+.header-actions,
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-menu {
+  min-height: 46px;
+  padding-left: 12px;
+  border-left: 1px solid #2b3848;
+  color: #9aa8ba;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.user-menu form {
+  margin: 0;
+}
+
+.user-menu button {
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid #334256;
+  border-radius: 6px;
+  background: #0f141b;
+  color: #c9d5e4;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 750;
+}
+
+.user-menu button:hover {
+  border-color: #3f8fd0;
+  background: #172232;
+}
+
+.login-page {
+  min-height: 100vh;
+}
+
+.login-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.login-panel {
+  width: min(100%, 420px);
+  padding: 28px;
+  border: 1px solid #263241;
+  border-radius: 8px;
+  background: #151c25;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.login-mark {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  background: #2d7fc0;
+  color: #ffffff;
+  font-size: 21px;
+  font-weight: 850;
+}
+
+.login-brand h1 {
+  margin: 0 0 5px;
+  font-size: 25px;
+}
+
+.login-brand p {
+  margin: 0;
+  color: #9aa8ba;
+  font-size: 14px;
+}
+
+.login-form {
+  display: grid;
+  gap: 16px;
+}
+
+.login-form label {
+  display: grid;
+  gap: 7px;
+  color: #b8c5d6;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.login-form input {
+  width: 100%;
+  min-height: 42px;
+  box-sizing: border-box;
+  padding: 9px 11px;
+  border: 1px solid #334256;
+  border-radius: 6px;
+  outline: none;
+  background: #0f141b;
+  color: #e6edf6;
+  font: inherit;
+}
+
+.login-form input:focus {
+  border-color: #3f8fd0;
+  box-shadow: 0 0 0 3px rgba(45, 127, 192, 0.18);
+}
+
+.login-form button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 6px;
+  background: #2d7fc0;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+
+.login-form button:hover {
+  background: #348dd1;
+}
+
 .panel {
   background: #151c25;
   border: 1px solid #263241;
@@ -492,6 +626,27 @@ tbody tr:last-child td {
     display: grid;
     align-items: start;
     padding: 16px;
+  }
+
+  .header-actions {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .page-nav {
+    width: 100%;
+  }
+
+  .page-nav a {
+    flex: 1;
+  }
+
+  .user-menu {
+    justify-content: space-between;
+    padding: 10px 0 0;
+    border-top: 1px solid #2b3848;
+    border-left: 0;
   }
 
   .brand-block h1,

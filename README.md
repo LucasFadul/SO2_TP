@@ -24,8 +24,14 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
+python3 -c "import secrets; print(secrets.token_urlsafe(48))"
+python3 scripts/create_web_user.py admin
 uvicorn web.app:app --reload
 ```
+
+Copiar el valor aleatorio generado en `HIPS_SESSION_SECRET` dentro de `.env`
+antes de crear el usuario. El dashboard requiere autenticacion y guarda
+solamente el hash de la contraseña en PostgreSQL.
 
 ## Flujo esperado
 

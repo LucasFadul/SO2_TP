@@ -379,6 +379,10 @@ HIPS_DB_PASSWORD=CAMBIAR_POR_LA_CLAVE_REAL
 
 HIPS_LOG_DIR=/var/log/hips
 
+HIPS_SESSION_SECRET=CAMBIAR_POR_UN_VALOR_ALEATORIO_LARGO
+HIPS_SESSION_MAX_AGE=28800
+HIPS_SESSION_HTTPS_ONLY=false
+
 HIPS_PREVENTION_DRY_RUN=true
 
 HIPS_EMAIL_DRY_RUN=true
@@ -399,7 +403,41 @@ reales.
 Los umbrales de los diez modulos se administran desde `/config` y se guardan en
 PostgreSQL.
 
-### 6.2 Configurar correo real
+### 6.2 Crear el usuario del dashboard
+
+Primero se debe definir un secreto aleatorio para firmar las sesiones web. Se
+puede generar con:
+
+```bash
+python3 -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+El valor obtenido se copia en `HIPS_SESSION_SECRET` dentro de `.env`. No debe
+publicarse ni reutilizarse como contraseña.
+
+Luego se crea el usuario administrador:
+
+```bash
+cd ~/SO2_TP
+source .venv/bin/activate
+python3 scripts/create_web_user.py admin
+```
+
+El script solicita y confirma una contraseña de al menos diez caracteres. La
+contraseña no se muestra en pantalla ni se guarda en texto plano: se almacena
+un hash PBKDF2 en la tabla `usuarios_web`.
+
+Comprobar el usuario creado sin mostrar su hash:
+
+```bash
+sudo -u postgres psql -d hips -c \
+  "SELECT id, username, rol, activo, ultimo_login FROM usuarios_web;"
+```
+
+**Captura recomendada:** usuario creado y consulta de `usuarios_web` sin
+contraseñas ni hashes.
+
+### 6.3 Configurar correo real
 
 Para usar un proveedor SMTP se deben completar los valores entregados por ese
 proveedor. Ejemplo general:
@@ -419,7 +457,7 @@ HIPS_ALERT_TO=administrador@example.com
 No se debe usar ni mostrar la contraseña principal de una cuenta. Cuando el
 proveedor lo permita, se utiliza una contraseña de aplicacion.
 
-### 6.3 Probar la conexion
+### 6.4 Probar la conexion
 
 Con el entorno virtual activo:
 
@@ -586,7 +624,29 @@ La direccion puede cambiar si la maquina virtual utiliza DHCP.
 
 ## 9. Uso del dashboard
 
-### 9.1 Pantalla Alarmas
+### 9.1 Iniciar y cerrar sesion
+
+Al abrir `http://<IP_ROCKY>:8000`, el sistema redirige a `/login`. Se debe
+ingresar con el usuario creado mediante `scripts/create_web_user.py`.
+
+Al autenticarse correctamente, el servidor crea una cookie de sesion firmada,
+con acceso restringido desde JavaScript (`HttpOnly`) y una duracion
+predeterminada de ocho horas. La contraseña no se guarda en la cookie.
+
+El boton **Salir** elimina la cookie y vuelve a la pantalla de acceso. Las
+rutas `/` y `/config` requieren una sesion valida; `/health` permanece publica
+para permitir la comprobacion del servicio.
+
+En una instalacion con HTTPS se debe cambiar:
+
+```dotenv
+HIPS_SESSION_HTTPS_ONLY=true
+```
+
+**Captura recomendada:** pantalla de acceso y encabezado del dashboard con el
+usuario autenticado.
+
+### 9.2 Pantalla Alarmas
 
 La pagina principal muestra:
 
@@ -607,7 +667,7 @@ muestra los registros guardados en PostgreSQL; no lee directamente los logs.
 
 **Captura recomendada:** dashboard con alarmas de varios modulos.
 
-### 9.2 Pantalla Configuracion
+### 9.3 Pantalla Configuracion
 
 Abrir:
 

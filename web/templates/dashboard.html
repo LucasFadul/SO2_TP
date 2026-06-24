@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>HIPS Rocky</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}?v=7">
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}?v=9">
   </head>
   <body>
     <main class="page">
@@ -13,10 +13,18 @@
           <h1>HIPS Rocky</h1>
           <p>Dashboard de alarmas HIPS</p>
         </div>
-        <nav class="page-nav" aria-label="Navegación principal">
-          <a class="active" href="/">Alarmas</a>
-          <a href="/config">Configuración</a>
-        </nav>
+        <div class="header-actions">
+          <nav class="page-nav" aria-label="Navegación principal">
+            <a class="active" href="/">Alarmas</a>
+            <a href="/config">Configuración</a>
+          </nav>
+          <div class="user-menu">
+            <span>{{ username }}</span>
+            <form method="post" action="/logout">
+              <button type="submit">Salir</button>
+            </form>
+          </div>
+        </div>
       </header>
 
       <section class="panel">
